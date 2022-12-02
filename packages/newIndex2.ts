@@ -2,19 +2,18 @@
 
 
 import axios from 'axios'
-import { isNotEmpty, deleteNull } from "./utils.js";
+import { isNotEmpty, isEmpty, deleteNull } from "./utils.js";
 import { reqDefaultValCfg } from "./reqDefaultCfg.ts"
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import type { IReqCfg, cusReqConfig, ILoad, IErrListObj } from "./InterReqCfg"
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import type { IReqCfg, cusReqConfig, ILoad, myRequestConfig, IErrListObj, IpendingReq } from "./InterReqCfg"
 
 // import qs from 'qs'
 
 
 class AutoAxios {
-    instance: AxiosInstance
-    
-    reqConfig: IReqCfg
-    errList?: Array<IErrListObj>
+    private instance: AxiosInstance
+    private reqConfig: IReqCfg
+    private errList?: Array<IErrListObj>
 
     constructor(reqConfig0: IReqCfg, errList0: Array<IErrListObj>) {
         this.reqConfig = reqConfig0
@@ -33,35 +32,36 @@ class AutoAxios {
         this.interceptors()
     }
     
-    private reqSuccess(config:cusReqConfig) {
+    static pendingRequest:Array<IpendingReq>
+
+    private reqSuccess(config:myRequestConfig) {
         if (config) {
             const reqMethod = config.method
             const reqParams = config.params
             const reqData = config.data
-            
-            const loadingSwitch = isNotEmpty(config.headers?.globalLoadingSwitch)
-                ? config.headers?.globalLoadingSwitch
-                : this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch
-
-            const errorMsgSwitch = isNotEmpty(config.headers?.globalErrorMsgSwitch)
-                ? config.headers?.globalErrorMsgSwitch
-                : this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch
-            if (loadingSwitch === 1) { // 开启全局 Loading
-                // NProgress.start()
-                if (this.reqConfig.getLoadService) {
-                    const loadService = this.reqConfig.getLoadService()
-                    if (loadService && loadService.showLoadMask) {
-                        loadService.showLoadMask()
-                    }
-                }
-                
+            const hasHeaders = isNotEmpty(config.headers)
+            if (isEmpty(config.customedData)) {
+                config.customedData = {}
             }
+            
+            const loadingSwitch:1|0 = isNotEmpty(config.customedData?.GlobalLoadingSwitch)
+                ? config.customedData?.GlobalLoadingSwitch
+                : (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
+            
+            const errorMsgSwitch:1|0 = isNotEmpty(config.customedData?.GlobalErrMsgSwitch)
+                ? config.customedData?.GlobalErrMsgSwitch
+                : (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+
+            if (loadingSwitch === 1) { // 开启了全局 Loading
+                this.handleLoading(true)
+            }
+            
 
             // 是否删除 空数据 开关; 有时候不能 删除空数据
-            let ifNull2Empty:boolean | undefined = false // 是否把 undefined null 转成 空字符串; 默认不转;
-            if (config.headers && isNotEmpty(config.headers.ifNull2Empty)) {
-                ifNull2Empty = config.headers?.ifNull2Empty
-                delete config.headers.ifNull2Empty
+            let ifNull2Empty = false // 是否把 undefined null 转成 空字符串; 默认不转;
+            if (config.customedData && isNotEmpty(config.customedData.ifNull2Empty)) {
+                ifNull2Empty = config.customedData.ifNull2Empty!
+                delete config.customedData.ifNull2Empty
             }
             if (reqMethod === 'get') {
                 if (isNotEmpty(reqParams)) {
@@ -74,24 +74,21 @@ class AutoAxios {
             }
 
 
-            // 把自定义 头的配置,移到 config.customedData 里
-            config.customedData = {
-                GlobalLoadingSwitch: loadingSwitch,
-                GlobalErrMsgSwitch: errorMsgSwitch,
-            }
-            delete config.headers.GlobalLoadingSwitch
-            delete config.headers.GlobalErrMsgSwitch
-
             // 待 优化
+            const i18nFd = this.reqConfig.RET_FIELDS_CFG.StorageLang
+            const i18n = window.localStorage[i18nFd] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
+            if (hasHeaders) {
+                config.headers!['accept-language'] = i18n
+            }
             
-            const i18n = localStorage.getItem([this.reqConfig.RET_FIELDS_CFG.StorageLang]) || this.reqConfig.REQ_CONST.DefaultLang
-            // config.headers[requestCfgObj.RetFieldsCfg.HttpLangField] = i18n
-            config.headers['accept-language'] = i18n
-
+            
             // 方法1 登录接口请求头不带 token
-            const token = localStorage.getItem([requestCfgObj.RetFieldsCfg.StorageTokenField]) || ''
-            if (isNotEmpty(token) && config.url !== requestCfgObj.ReqConst.LOGIN_URL) {
-                config.headers[requestCfgObj.RetFieldsCfg.HttpTokenField] = token
+            const token:string = window.localStorage[this.reqConfig.RET_FIELDS_CFG.StorageToken] || ''
+            if (isNotEmpty(token) && config.url !== this.reqConfig.REQ_CONST.LoginUrl) {
+                if (hasHeaders) {
+                    config.headers![this.reqConfig.RET_FIELDS_CFG.HttpToken] = token
+                }
+                
             }
             // 方法2 登录接口请求头不带 token
             // const hasPms = isNotEmpty(config.params)
@@ -104,40 +101,41 @@ class AutoAxios {
             //         delete config.data.isLoginReq
             //     }
             // } else {
-            //     config.headers[requestCfgObj.RetFieldsCfg.HttpTokenField] = localStorage.getItem([requestCfgObj.RetFieldsCfg.StorageTokenField]) || ''
+            //     config.customedData[requestCfgObj.RetFieldsCfg.HttpTokenField] = localStorage.getItem([requestCfgObj.RetFieldsCfg.StorageTokenField]) || ''
             // }
-
+            
             /** ************************************** 处理重复请求 start  **************************************/
-            if (requestCfgObj.ReqConst.IF_CANCEL_RPREQ === 1) { // 取消重复请求
-                const { url, method, data = {}, params = {}, pendingCancelSwitch = true } = config
+            if (this.reqConfig.REQ_SWITCH.IfCancelRepeatpReq === 1) { // 取消重复请求
+                const { url, method, data = {}, params = {} } = config
+                // const { url, method, data = {}, params = {}, pendingCancelSwitch = true } = config
                 // // 将数据转为JSON字符串格式，后面比较好对比;
                 // // 是否是同一个请求: url method data params都应该相等,但是考虑到 参数里有时间戳的话, 就不可能存在相同的请求了;
                 const jData = JSON.stringify(data)
                 const jParams = JSON.stringify(params)
-
                 // pendingCancelSwitch
                 // 有些公共请求，不受且不应受页面的切换而受到影响的请求，这类请求就不应该在切换路由的时候取消掉了
                 // 默认请求 在切换路由时 都要取消
                 const requestMark = method === 'get' ? `${method}_${url}_${jParams}` : `${method}_${url}_${jData}`
-                const markIndex = pendingRequest.findIndex(item => item.name === requestMark)
+                const markIndex = AutoAxios.pendingRequest.findIndex(item => item.name === requestMark)
                 if (markIndex > -1) {
-                    pendingRequest[markIndex].cancel()
-                    pendingRequest.splice(markIndex, 1)
+                    AutoAxios.pendingRequest[markIndex].cancel()
+                    AutoAxios.pendingRequest.splice(markIndex, 1)
                 }
                 // （重新）新建针对这次请求的axios的cancelToken标识
                 const CancelToken = axios.CancelToken
                 const source = CancelToken.source()
                 config.cancelToken = source.token
-                config.requestMark = requestMark // 设置自定义配置requestMark项，主要用于响应拦截中
-                pendingRequest.push({
+                
+                config.customedData!.requestMark = requestMark // 设置自定义配置requestMark项，主要用于响应拦截中
+                AutoAxios.pendingRequest.push({
                     name: requestMark,
                     cancel: source.cancel,
-                    pendingCancelSwitch: pendingCancelSwitch, // 可能会有优先级高于默认设置的 pendingCancelSwitch 项值
+                    // pendingCancelSwitch: pendingCancelSwitch, // 可能会有优先级高于默认设置的 pendingCancelSwitch 项值
                 })
             }
-
-            if (requestCfgObj.beforeReq) {
-                requestCfgObj.beforeReq(config)
+            
+            if (this.reqConfig.beforeReq) {
+                this.reqConfig.beforeReq(config)
             }
         }
 
@@ -149,33 +147,36 @@ class AutoAxios {
         requestCfgObj.showTipBox('RequstFailed')
         return new Promise(() => {}) // 中断Promise链
     }
-    
-    private respSuc(response) {
-        const { requestMark } = response.config
-        if (pendingRequest.length > 0) {
-            const markIndex = pendingRequest.findIndex(item => item.name === requestMark)
-            markIndex > -1 && pendingRequest.splice(markIndex, 1)
-        }
+    // AxiosRequestConfig<myRequestConfig>
+    private respSuc(response:AxiosResponse) {
+        if (response.config && response.config.customedData) {
+            const { requestMark } = response.config.customedData
+            if (AutoAxios.pendingRequest.length > 0) {
+                const markIndex = AutoAxios.pendingRequest.findIndex(item => item.name === requestMark)
+                markIndex > -1 && AutoAxios.pendingRequest.splice(markIndex, 1)
+            }
 
-        const loadingSwitch = isNotEmpty(response.config.customedData) &&
-            isNotEmpty(response.config.customedData.globalLoadingSwitch)
-            ? response.config.customedData.globalLoadingSwitch
-            : requestCfgObj.ReqConst.GLOBAL_LOADING_SWITCH
-        const errorMsgSwitch = isNotEmpty(response.config.customedData) &&
-            isNotEmpty(response.config.customedData.globalErrorMsgSwitch)
-            ? response.config.customedData.globalErrorMsgSwitch
-            : requestCfgObj.ReqConst.GLOBAL_ERROR_MSG_SWITCH
-        if (loadingSwitch === 1) { // 开启了 全局 Loading
-            // NProgress.done()
-            hideLoading()
-        }
-        if (response.status === 200 && response.data instanceof Blob) {
-            return Promise.resolve({ isOk: true, retData: response.data })
-        } else {
-            return resHandler(response, errorMsgSwitch === 1, pendingRequest)
+            const hasCusData = response.config && isNotEmpty(response.config.customedData)
+            const loadingSwitch = hasCusData && isNotEmpty(response.config.customedData.GlobalLoadingSwitch)
+                ? response.config.customedData.GlobalLoadingSwitch
+                : (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
+            
+            const errorMsgSwitch = hasCusData && isNotEmpty(response.config.customedData.GlobalErrMsgSwitch)
+                ? response.config.customedData.GlobalErrMsgSwitch
+                : (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+            
+            if (loadingSwitch === 1) { // 开启了全局 Loading
+                this.handleLoading(false)
+            }
+
+            if (response.status === 200 && response.data instanceof Blob) {
+                return Promise.resolve({ isOk: true, retData: response.data })
+            } else {
+                return resHandler(response, errorMsgSwitch === 1, AutoAxios.pendingRequest)
+            }
         }
     }
-    private respError(error) {
+    private respError(error: AxiosError) {
         // NProgress.done()
         hideLoading()
 
@@ -266,12 +267,24 @@ class AutoAxios {
             }
         }
     }
+    // flag: true show loading
+    private handleLoading(flag:boolean):void {
+        // NProgress.done()
+        if (this.reqConfig.getLoadService) {
+            const loadService = this.reqConfig.getLoadService()
+            if (loadService && loadService.showLoadMask && loadService.closeLoadMask) {
+                if (flag) {
+                    loadService.showLoadMask() 
+                } else {
+                    loadService.closeLoadMask()
+                }
+            }
+        }
+    }
 
     interceptors(){
-        // 请求拦截器
-        this.instance.interceptors.request.use(this.reqSuccess, this.reqError)
-        // 响应拦截器
-        this.instance.interceptors.response.use(this.respSuc, this.respError)
+        this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
+        this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
     }
 
     request(options:AxiosRequestConfig){

@@ -24,6 +24,22 @@ export interface reqDefault {
     get?: { [propName: string | number]: any },
     xssProtection?: { [propName: string | number]: any },
 }
+export interface myRequestConfig extends AxiosRequestConfig {
+    customedData?: {
+        GetErrMsgWay?: "byMap" | "byRes",
+        GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
+        GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
+        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
+        ifNull2Empty?: boolean,
+        requestMark?: string,
+        // [propName: string | number]: any 
+    },
+}
+export interface IpendingReq {
+    name: string;
+    cancel: Function;
+    pendingCancelSwitch?: Array<any>;
+}
 
 type newHeader = RawAxiosRequestHeaders & {
     GlobalErrMsgSwitch: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
@@ -99,6 +115,7 @@ export interface IReqCfg {
         statusCode: string | number,
         response: AxiosResponse,
     ): void;
+    beforeReq(config:AxiosRequestConfig):void;
 }
 
 
