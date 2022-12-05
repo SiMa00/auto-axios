@@ -34,14 +34,29 @@ export const list2Map = (list, key = 'id') => {
     return map
 }
 
-export const isStringData = (str) => {
-    return Object.prototype.toString.call(str) === "[object String]"
+export function isArray(arr) {
+    return Object.prototype.toString.call(arr) === "[object Array]"
 }
-export const isNumber = (str) => {
-    return Object.prototype.toString.call(str) === '[object Number]'
+export function isFunc(str) {
+    return Object.prototype.toString.call(str) === "[object Function]"
+}
+export function isAsyncFunction(fn) {
+    return Object.prototype.toString.call(fn) === "[object AsyncFunction]"
 }
 export function isObject(obj) {
     return Object.prototype.toString.call(obj) === "[object Object]"
+}
+export function isString(str) {
+    return Object.prototype.toString.call(str) === "[object String]"
+}
+export function isBool(str) {
+    return Object.prototype.toString.call(str) === '[object Boolean]'
+}
+export function isPromise(obj) {
+    return Object.prototype.toString.call(obj) === "[object Promise]"
+}
+export function isNumber(data) {
+    return Object.prototype.toString.call(data) === '[object Number]'
 }
 
 // 把 返回结果里 带 空的，转成 undefined; 方便antd undefined时显示 placeHolder

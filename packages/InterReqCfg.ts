@@ -30,34 +30,19 @@ export interface myRequestConfig extends AxiosRequestConfig {
         GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
         GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
         IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
-        ifNull2Empty?: boolean,
+        IfNull2Empty?: boolean,
         requestMark?: string,
         // [propName: string | number]: any 
     },
 }
+
+export type myResponseConfig = { config: myRequestConfig } & Omit<AxiosResponse, 'config'>
+
 export interface IpendingReq {
     name: string;
     cancel: Function;
     pendingCancelSwitch?: Array<any>;
 }
-
-type newHeader = RawAxiosRequestHeaders & {
-    GlobalErrMsgSwitch: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
-    GlobalLoadingSwitch: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
-    IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
-    ifNull2Empty?: boolean, // 是否把 undefined null 转成 空字符串;
-}
-export type cusReqConfig = { 
-    headers?:newHeader,
-    customedData?: {
-        GlobalErrMsgSwitch: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
-        GlobalLoadingSwitch: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
-    }
-} & Omit<AxiosRequestConfig, 'headers'>
-// export interface cusReqConfig extends AxiosRequestConfig {
-//     // RawAxiosRequestHeaders
-// }
-
 
 
 /** 自定义的 返回消息
@@ -90,32 +75,32 @@ export interface IReqCfg {
         GetErrMsgWay?: "byMap" | "byRes",
         GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
         GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
-        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
+        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 取消重复请求; 0 不取消
     },
     RET_FIELDS_CFG: {
         RetCode: string,
         RetMsg: string,
         RetData: string,
         RetCount: string, // 列表查询条数 统计字段
-        StorageToken: string,
-        HttpToken: string, // TODO 可考虑删除 与 取值应 与 StorageToken 字段一致
+        StorageTokenKey: string,
+        HttpTokenKey: string,
 
-        StorageLang: string, // 存储 里的 语言字段 key
-        HttpLang?: string, // 发送给后台的 语言字段 // TODO 可考虑删除 与 取值应 与 StorageLang 字段一致
+        StorageLangKey: string, // 存储 里的 语言字段 key
+        HttpLangKey?: string, // 发送给后台的 语言字段
     },
     REQ_WAYS_CFG?: {
         DefaultWay?: 'post' | 'get' | 'delete' | 'put',
         DefaultHeader?: { [propName: string | number]: any }, // { 'x-tenant-header': 'electronic-commerce' },
     },
+    showTipBox(
+        retMsg?: string | number | Array<any>,
+        retCode?: string | number,
+        statusCode?: string | number,
+        response?: AxiosResponse,
+    ): void;
     // 返回 loadService 对象需要提供 closeLoadMask() + showLoadMask() 方法
     getLoadService?: () => ILoad;
-    showTipBox(
-        retMsg: string | number | Array<any>,
-        retCode: string | number,
-        statusCode: string | number,
-        response: AxiosResponse,
-    ): void;
-    beforeReq(config:AxiosRequestConfig):void;
+    beforeReq?: (config:AxiosRequestConfig) => void;
 }
 
 

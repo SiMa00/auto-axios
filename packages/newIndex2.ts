@@ -2,34 +2,36 @@
 
 
 import axios from 'axios'
-import { isNotEmpty, isEmpty, deleteNull } from "./utils.js";
+import { isNotEmpty, isEmpty, deleteNull, isFunc } from "./utils.js";
 import { reqDefaultValCfg } from "./reqDefaultCfg.ts"
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { IReqCfg, cusReqConfig, ILoad, myRequestConfig, IErrListObj, IpendingReq } from "./InterReqCfg"
-
+import type { IReqCfg, ILoad, myResponseConfig, myRequestConfig, IErrListObj, IpendingReq } from "./InterReqCfg"
 // import qs from 'qs'
 
-
-class AutoAxios {
+// TODO 测试完毕后，带泛型
+class AutoAxios<R, E> {
     private instance: AxiosInstance
-    private reqConfig: IReqCfg
-    private errList?: Array<IErrListObj>
+    private loadService?: ILoad
 
-    constructor(reqConfig0: IReqCfg, errList0: Array<IErrListObj>) {
-        this.reqConfig = reqConfig0
-        this.errList = errList0
+    constructor(private reqConfig: IReqCfg, private errList?: Array<IErrListObj>) {
+        this.reqConfig = reqConfig
+        this.errList = errList
+        
+        if (reqConfig.getLoadService && isFunc(reqConfig.getLoadService)) {
+            this.loadService = reqConfig.getLoadService()
+        }
 
         this.instance = axios.create({
-            baseURL: reqConfig0.REQ_CONST.BaseUrl,
+            baseURL: reqConfig.REQ_CONST.BaseUrl,
             headers: {
                 ...(reqDefaultValCfg.xssProtection),
-                ...reqConfig0.REQ_WAYS_CFG?.DefaultHeader,
+                ...reqConfig.REQ_WAYS_CFG?.DefaultHeader,
             },
-            timeout: reqConfig0.REQ_CONST.Timeout || reqDefaultValCfg.timeout,
+            timeout: reqConfig.REQ_CONST.Timeout || reqDefaultValCfg.timeout,
             withCredentials: true, // 跨域携带 cookie
         })
 
-        this.interceptors()
+        this.setInterceptors()
     }
     
     static pendingRequest:Array<IpendingReq>
@@ -39,7 +41,11 @@ class AutoAxios {
             const reqMethod = config.method
             const reqParams = config.params
             const reqData = config.data
-            const hasHeaders = isNotEmpty(config.headers)
+
+            // 预置 {} 防止报错 cant read undefined
+            if (isEmpty(config.headers)) {
+                config.headers = {}
+            }
             if (isEmpty(config.customedData)) {
                 config.customedData = {}
             }
@@ -58,37 +64,33 @@ class AutoAxios {
             
 
             // 是否删除 空数据 开关; 有时候不能 删除空数据
-            let ifNull2Empty = false // 是否把 undefined null 转成 空字符串; 默认不转;
-            if (config.customedData && isNotEmpty(config.customedData.ifNull2Empty)) {
-                ifNull2Empty = config.customedData.ifNull2Empty!
-                delete config.customedData.ifNull2Empty
+            let myIfNull2Empty = false // 是否把 undefined null 转成 空字符串; 默认不转;
+            if (config.customedData && isNotEmpty(config.customedData.IfNull2Empty)) {
+                myIfNull2Empty = config.customedData.IfNull2Empty!
             }
+            
             if (reqMethod === 'get') {
                 if (isNotEmpty(reqParams)) {
-                    config.params = deleteNull(reqParams, ifNull2Empty)
+                    config.params = deleteNull(reqParams, myIfNull2Empty)
                 }
             } else {
                 if (isNotEmpty(reqData)) {
-                    config.data = deleteNull(reqData, ifNull2Empty)
+                    config.data = deleteNull(reqData, myIfNull2Empty)
                 }
             }
 
 
-            // 待 优化
-            const i18nFd = this.reqConfig.RET_FIELDS_CFG.StorageLang
-            const i18n = window.localStorage[i18nFd] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
-            if (hasHeaders) {
-                config.headers!['accept-language'] = i18n
+            const i18nKey = this.reqConfig.RET_FIELDS_CFG.StorageLangKey
+            const i18nVal = window.localStorage[i18nKey] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
+            const langFd = this.reqConfig.RET_FIELDS_CFG.HttpLangKey || reqDefaultValCfg.httpLangKey
+            if (langFd) {
+                config.headers![langFd] = i18nVal
             }
-            
             
             // 方法1 登录接口请求头不带 token
-            const token:string = window.localStorage[this.reqConfig.RET_FIELDS_CFG.StorageToken] || ''
-            if (isNotEmpty(token) && config.url !== this.reqConfig.REQ_CONST.LoginUrl) {
-                if (hasHeaders) {
-                    config.headers![this.reqConfig.RET_FIELDS_CFG.HttpToken] = token
-                }
-                
+            const tokenVal:string = window.localStorage[this.reqConfig.RET_FIELDS_CFG.StorageTokenKey] || ''
+            if (isNotEmpty(tokenVal) && config.url !== this.reqConfig.REQ_CONST.LoginUrl) {
+                config.headers![this.reqConfig.RET_FIELDS_CFG.HttpTokenKey] = tokenVal
             }
             // 方法2 登录接口请求头不带 token
             // const hasPms = isNotEmpty(config.params)
@@ -134,21 +136,21 @@ class AutoAxios {
                 })
             }
             
-            if (this.reqConfig.beforeReq) {
+            if (this.reqConfig.beforeReq && isFunc(this.reqConfig.beforeReq)) {
                 this.reqConfig.beforeReq(config)
             }
         }
 
         return config
     }
-    private reqError() {
-        // NProgress.done()
-        hideLoading()
-        requestCfgObj.showTipBox('RequstFailed')
+    private reqError(error) {
+        this.handleLoading(false)
+        // TODO 开关
+        this.reqConfig.showTipBox('RequstFailed')
         return new Promise(() => {}) // 中断Promise链
     }
-    // AxiosRequestConfig<myRequestConfig>
-    private respSuc(response:AxiosResponse) {
+    
+    private respSuc(response:myResponseConfig) {
         if (response.config && response.config.customedData) {
             const { requestMark } = response.config.customedData
             if (AutoAxios.pendingRequest.length > 0) {
@@ -176,33 +178,33 @@ class AutoAxios {
             }
         }
     }
-    private respError(error: AxiosError) {
-        // NProgress.done()
-        hideLoading()
+    private respError(error: any) {
+        this.handleLoading(false)
 
         // 被取消的请求 => cancle 进来的: error.config + error.request 都是 undefined
         if (axios.isCancel(error)) {
             return new Promise(() => {}) // 中断Promise链
         } else { // 错误向下传递
             if (error && error.config) {
-                if (pendingRequest.length > 0) {
-                    const mIndex = pendingRequest.findIndex(item => item.name === error.config.requestMark)
+                if (AutoAxios.pendingRequest.length > 0) {
+                    const mIndex = AutoAxios.pendingRequest.findIndex(item => item.name === error.config.requestMark)
                     if (mIndex > -1) {
-                        pendingRequest.splice(mIndex, 1)
+                        AutoAxios.pendingRequest.splice(mIndex, 1)
                     } else {
-                        pendingRequest.length > 0 && pendingRequest.splice(0, 1)
+                        AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
                     }
                 }
             } else { // 拿不到 requestMark 时的处理
-                pendingRequest.length > 0 && pendingRequest.splice(0, 1)
+                AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
             }
 
             if (error && error.response && error.response.status) {
                 // The request was made and the server responded with a status code
                 // that falls out of the range of 2xx
                 const hData = error.response && error.response.data
-                const retCode = (hData && hData[requestCfgObj.RetFieldsCfg.MyRetCode]) || error.response.status || ''
-                const retMsg = (hData && hData[requestCfgObj.RetFieldsCfg.MyRetMsg]) || error.response.statusText || ''
+                
+                const retCode = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetCode]) || error.response.status || ''
+                const retMsg = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetMsg]) || error.response.statusText || ''
                 const retData = hData || {}
 
                 let tip = ''
@@ -214,14 +216,13 @@ class AutoAxios {
                     tip = 'SystemError'
                 }
 
-                if (pendingRequest.length === 0) {
+                if (AutoAxios.pendingRequest.length === 0) {
                     // 给用户的提示，要方便理解，后台返回的消息展示上去的话，可能不太容易理解
-                    requestCfgObj.showTipBox(
-                        `${(hData && hData[requestCfgObj.RetFieldsCfg.MyRetMsg]) || tip}`,
+                    this.reqConfig.showTipBox(
+                        `${(hData && hData[this.reqConfig.RET_FIELDS_CFG.RetMsg]) || tip}`,
                         retCode,
                         error.response && error.response.status,
                         error.response,
-                        error,
                     )
                 }
 
@@ -234,8 +235,8 @@ class AutoAxios {
             } else if (error.request) {
                 // The request was made but no response was received
                 const msgRes = error.message || 'ServerNoResponse'
-                if (pendingRequest.length === 0) {
-                    requestCfgObj.showTipBox('ServerNoResponse', '', error.response && error.response.status, error.response, error)
+                if (AutoAxios.pendingRequest.length === 0) {
+                    this.reqConfig.showTipBox('ServerNoResponse', '', error.response && error.response.status, error)
                 }
 
                 return Promise.resolve({
@@ -248,14 +249,14 @@ class AutoAxios {
                 // Something happened in setting up the request that triggered an Error
                 const msg = error.message || ''
                 let newMsg = ''
-                if (error && error.config && error.config.timeout === requestCfgObj.ReqConst.Timeout) { // 请求超时
+                if (error && error.config && error.config.timeout === this.reqConfig.REQ_CONST.Timeout) { // 请求超时
                     newMsg = 'RequestTimeout'
                 } else {
                     newMsg = 'SystemError'
                 }
 
-                if (pendingRequest.length === 0) {
-                    requestCfgObj.showTipBox(newMsg, '', error.response && error.response.status, error.response, error)
+                if (AutoAxios.pendingRequest.length === 0) {
+                    this.reqConfig.showTipBox(newMsg, '', error.response && error.response.status, error)
                 }
 
                 return Promise.resolve({
@@ -267,22 +268,21 @@ class AutoAxios {
             }
         }
     }
+
     // flag: true show loading
     private handleLoading(flag:boolean):void {
-        // NProgress.done()
-        if (this.reqConfig.getLoadService) {
-            const loadService = this.reqConfig.getLoadService()
-            if (loadService && loadService.showLoadMask && loadService.closeLoadMask) {
-                if (flag) {
-                    loadService.showLoadMask() 
-                } else {
-                    loadService.closeLoadMask()
-                }
+        if (this.loadService && this.loadService.showLoadMask && this.loadService.closeLoadMask) {
+            if (flag) {
+                // NProgress.start()
+                this.loadService.showLoadMask() 
+            } else {
+                // NProgress.done()
+                this.loadService.closeLoadMask()
             }
         }
     }
 
-    interceptors(){
+    setInterceptors(){
         this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
         this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
     }
