@@ -50,7 +50,7 @@ export interface IAutoRequestCfg {
     },
     REQ_WAYS_CFG?: {
         DefaultWay?: 'post' | 'get' | 'delete' | 'put',
-        DefaultHeader?: { [propName: string | number]: any }, // { 'x-tenant-header': 'electronic-commerce' },
+        DefaultHeader?: objAny, // { 'x-tenant-header': 'electronic-commerce' },
     },
     showTipBox(
         retMsg?: string | number | Array<any>,
@@ -69,18 +69,19 @@ export interface ILoad {
     closeLoadMask(): void;
 }
 // 错误码集合里的 错误对象
-export interface IErrItem {
+export interface IErrListItem {
     retCode: string;
     retMsg: string;
 }
+export interface IErrMap { [propName: string | number]: IErrListItem }
 
 // 默认请求配置
 export interface IreqDefaultVal {
-    defaultHeader?: { [propName: string | number]: any },
+    defaultHeader?: objAny,
     defaultWay?: 'post' | 'get' | 'put' | 'delete'
-    post?: { [propName: string | number]: any },
-    get?: { [propName: string | number]: any },
-    xssProtection?: { [propName: string | number]: any },
+    post?: objAny,
+    get?: objAny,
+    xssProtection?: objAny,
 }
 export interface IRequestCfg extends AxiosRequestConfig {
     customedData?: {
@@ -99,6 +100,15 @@ export interface IpendingReq {
     name: string;
     cancel: Function;
     pendingCancelSwitch?: Array<any>;
+}
+export interface objAny { [propName: string | number]: any }
+export interface Ires {
+    retCode: number|string,
+    retMsg:string,
+    total: number|string,
+    retData: objAny,
+    orgResData: objAny,
+    isOk: boolean, // 增加判断是否成功的方法，避免后续大量判断 ReqConst['ReturnSuccessCode'].includes(retCode)
 }
 
 

@@ -2,20 +2,20 @@
 
 
 import axios from 'axios'
-import { isNotEmpty, isEmpty, deleteNull, isFunc } from "./utils.js";
+import { isNotEmpty, isEmpty, deleteNull, isFunc, list2Map } from "./utils.js";
 import { reqDefaultValCfg } from "./defaultVal"
+import { getRetData } from "./handleRes"
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { IAutoRequestCfg, ILoad, IResponseCfg, IRequestCfg, IErrItem, IpendingReq } from "./reqTypes"
+import type { IAutoRequestCfg, ILoad, IResponseCfg, IRequestCfg, IErrListItem, IpendingReq, IErrMap } from "./reqTypes"
 // import qs from 'qs'
 
 // TODO 测试完毕后，带泛型
-class AutoAxios<R, E> {
+class AutoAxios<R> {
     private instance: AxiosInstance
-    private loadService?: ILoad
+    private readonly loadService?: ILoad
 
-    constructor(private reqConfig: IAutoRequestCfg, private errList?: Array<IErrItem>) {
+    constructor(private readonly reqConfig: IAutoRequestCfg) {
         this.reqConfig = reqConfig
-        this.errList = errList
         
         if (reqConfig.getLoadService && isFunc(reqConfig.getLoadService)) {
             this.loadService = reqConfig.getLoadService()
@@ -33,8 +33,17 @@ class AutoAxios<R, E> {
 
         this.setInterceptors()
     }
+
     
-    static pendingRequest:Array<IpendingReq>
+    static pendingRequest?:Array<IpendingReq>
+    private static errMap:IErrMap
+
+    static setErrMap(eList: Array<IErrListItem>) {
+        if (isNotEmpty(eList)) {
+            AutoAxios.errMap = list2Map(eList, 'retCode')
+        }
+    }
+
 
     private reqSuccess(config:IRequestCfg) {
         if (config) {
@@ -158,7 +167,7 @@ class AutoAxios<R, E> {
     private respSuc(response:IResponseCfg) {
         if (response.config && response.config.customedData) {
             const { requestMark } = response.config.customedData
-            if (AutoAxios.pendingRequest.length > 0) {
+            if (AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0) {
                 const markIndex = AutoAxios.pendingRequest.findIndex(item => item.name === requestMark)
                 markIndex > -1 && AutoAxios.pendingRequest.splice(markIndex, 1)
             }
@@ -173,7 +182,7 @@ class AutoAxios<R, E> {
             if (response.status === 200 && response.data instanceof Blob) {
                 return Promise.resolve({ isOk: true, retData: response.data })
             } else {
-                return resHandler(response, errorMsgSwitch === 1, AutoAxios.pendingRequest)
+                return this.handleRes(response, errorMsgSwitch === 1, AutoAxios.errMap, AutoAxios.pendingRequest)
             }
         }
     }
@@ -280,16 +289,33 @@ class AutoAxios<R, E> {
             }
         }
     }
+    private handleRes(response:IResponseCfg, errMsgFlag:boolean, errMap?:IErrMap, pendingReq?:Array<IpendingReq>) {
+        const res0 = getRetData(this.reqConfig, response, errMap)
+        if (res0.isOk !== true) {
+            if (errMsgFlag && isNotEmpty(AutoAxios.pendingRequest)) {
+                this.reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
+            }
+            
+            if (this.reqConfig.REQ_CONST.LoginExpiredCode.includes(res0.retCode)) {
+                return new Promise(() => {}) // 中断Promise链
+            } else {
+                return res0
+            }
+        } else {
+            return res0
+        }
+    }
+
 
     setInterceptors(){
         this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
         this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
     }
 
+
     request(options:AxiosRequestConfig){
         return this.instance(options)
     }
-
 }
 
 

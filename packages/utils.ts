@@ -1,6 +1,7 @@
 
+import type { objAny } from "./reqTypes"
 
-export const isEmpty = (b) => {
+export function isEmpty<T>(b:T):boolean {
     if (b == null) {
         return true
     }
@@ -18,56 +19,57 @@ export const isEmpty = (b) => {
     }
     return false
 }
-
-export const isNotEmpty = (b) => {
+export function isNotEmpty<T>(b:T):boolean {
     return !isEmpty(b)
 }
 
-export const list2Map = (list, key = 'id') => {
-    const map = {}
+
+export function list2Map(list: Array<objAny>, key:string|number = 'id') {
+    const map:objAny = {}
     if (list) {
         for (let index = 0; index < list.length; index++) {
             const val = list[index][key]
             map[val] = list[index]
         }
     }
+
     return map
 }
 
-export function isArray(arr) {
+export function isArray<T>(arr:Array<T>) {
     return Object.prototype.toString.call(arr) === "[object Array]"
 }
-export function isFunc(str) {
-    return Object.prototype.toString.call(str) === "[object Function]"
+export function isFunc<T>(fn:T) {
+    return Object.prototype.toString.call(fn) === "[object Function]"
 }
-export function isAsyncFunction(fn) {
+export function isAsyncFunc<T>(fn:T) {
     return Object.prototype.toString.call(fn) === "[object AsyncFunction]"
 }
-export function isObject(obj) {
+export function isObject(obj:objAny) {
     return Object.prototype.toString.call(obj) === "[object Object]"
 }
-export function isString(str) {
+export function isString(str:string) {
     return Object.prototype.toString.call(str) === "[object String]"
 }
-export function isBool(str) {
-    return Object.prototype.toString.call(str) === '[object Boolean]'
+export function isBool(b:boolean) {
+    return Object.prototype.toString.call(b) === '[object Boolean]'
 }
-export function isPromise(obj) {
-    return Object.prototype.toString.call(obj) === "[object Promise]"
+export function isPromise<T>(p:T) {
+    return Object.prototype.toString.call(p) === "[object Promise]"
 }
-export function isNumber(data) {
-    return Object.prototype.toString.call(data) === '[object Number]'
+export function isNumber(n:number) {
+    return Object.prototype.toString.call(n) === '[object Number]'
 }
 
 // 把 返回结果里 带 空的，转成 undefined; 方便antd undefined时显示 placeHolder
-export const transNullChar = (obj, transUndefined = true) => {
+export function transNullChar(obj:objAny, transUndefined:boolean = true) {
     if (obj && isObject(obj)) {
-        const temObj = {}
+        const temObj:objAny = {}
 
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
                 const val = obj[key]
-                const f1 = isStringData(val) && (val.trim() === '')
+                const f1 = isString(val) && (val.trim() === '')
                 if (transUndefined && (f1 || val === null)) {
                     temObj[key] = undefined
                 } else {
@@ -84,9 +86,9 @@ export const transNullChar = (obj, transUndefined = true) => {
 
 // trans2EmptyChar 是否需要把 null + Undefined + '' 的值转成 空字符串
 // 默认不转 空的话，不会加入参数里
-export const deleteNull = (obj, trans2EmptyChar = false, trim = true) => {
+export function deleteNull(obj:objAny, trans2EmptyChar:boolean = false, trim:boolean = true) {
     if (obj && isObject(obj)) {
-        const temObj = {}
+        const temObj:objAny = {}
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
                 const val = obj[key]
@@ -98,7 +100,7 @@ export const deleteNull = (obj, trans2EmptyChar = false, trim = true) => {
                     } else {
                         if (isNotEmpty(val)) {
                             let rStr = val
-                            if (trim === true && isStringData(val)) {
+                            if (trim === true && isString(val)) {
                                 rStr = val.trim()
                             }
                             temObj[key] = rStr
