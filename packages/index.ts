@@ -5,7 +5,7 @@ import axios from 'axios'
 import { isNotEmpty, isEmpty, deleteNull, isFunc } from "./utils.js";
 import { reqDefaultValCfg } from "./defaultVal"
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { IReqCfg, ILoad, myResponseConfig, myRequestConfig, IErrListObj, IpendingReq } from "./reqTypes"
+import type { IAutoRequestCfg, ILoad, IResponseCfg, IRequestCfg, IErrItem, IpendingReq } from "./reqTypes"
 // import qs from 'qs'
 
 // TODO 测试完毕后，带泛型
@@ -13,7 +13,7 @@ class AutoAxios<R, E> {
     private instance: AxiosInstance
     private loadService?: ILoad
 
-    constructor(private reqConfig: IReqCfg, private errList?: Array<IErrListObj>) {
+    constructor(private reqConfig: IAutoRequestCfg, private errList?: Array<IErrItem>) {
         this.reqConfig = reqConfig
         this.errList = errList
         
@@ -36,7 +36,7 @@ class AutoAxios<R, E> {
     
     static pendingRequest:Array<IpendingReq>
 
-    private reqSuccess(config:myRequestConfig) {
+    private reqSuccess(config:IRequestCfg) {
         if (config) {
             const reqMethod = config.method
             const reqParams = config.params
@@ -155,7 +155,7 @@ class AutoAxios<R, E> {
         return new Promise(() => {}) // 中断Promise链
     }
     
-    private respSuc(response:myResponseConfig) {
+    private respSuc(response:IResponseCfg) {
         if (response.config && response.config.customedData) {
             const { requestMark } = response.config.customedData
             if (AutoAxios.pendingRequest.length > 0) {

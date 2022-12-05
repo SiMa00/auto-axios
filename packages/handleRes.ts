@@ -2,7 +2,7 @@
 import { isEmpty, list2Map, transNullChar } from './utils'
 import { requestCfgObj } from './reqConfig'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { IReqCfg, ILoad, myResponseConfig, myRequestConfig, IErrListObj, IpendingReq } from "./reqTypes"
+import type { IAutoRequestCfg, ILoad, IResponseCfg, IRequestCfg, IErrItem, IpendingReq } from "./reqTypes"
 
 let ErrorMap = {}
 function getMsgByCode(respDataCode:number|string):string {
@@ -12,7 +12,7 @@ function getMsgByCode(respDataCode:number|string):string {
 }
 
 // 处理返回数据
-export const getRetData = (response:myResponseConfig) => {
+export const getRetData = (response:IResponseCfg) => {
     const retCode = response.data[requestCfgObj.RetFieldsCfg.MyRetCode]
     const retMsg = (response.data && response.data[requestCfgObj.RetFieldsCfg.MyRetMsg]) || ''
     const res = {
@@ -54,7 +54,7 @@ export const getRetData = (response:myResponseConfig) => {
 }
 
 // 全局错误消息提示处理
-export function resHandler(response:myResponseConfig, errorMsgFlag:boolean, pendingRequest:Array<IpendingReq>) {
+export function resHandler(response:IResponseCfg, errorMsgFlag:boolean, pendingRequest:Array<IpendingReq>) {
     const res0 = getRetData(response)
     if (res0.isOk !== true) {
         if (errorMsgFlag && pendingRequest.length === 0) {

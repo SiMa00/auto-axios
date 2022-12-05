@@ -11,20 +11,20 @@ export interface ILoad {
     closeLoadMask(): void;
 }
 // 错误码集合里的 错误对象
-export interface IErrListObj {
+export interface IErrItem {
     retCode: string;
     retMsg: string;
 }
 
 // 默认请求配置
-export interface reqDefault {
+export interface IreqDefaultVal {
     defaultHeader?: { [propName: string | number]: any },
     defaultWay?: 'post' | 'get' | 'put' | 'delete'
     post?: { [propName: string | number]: any },
     get?: { [propName: string | number]: any },
     xssProtection?: { [propName: string | number]: any },
 }
-export interface myRequestConfig extends AxiosRequestConfig {
+export interface IRequestCfg extends AxiosRequestConfig {
     customedData?: {
         GetErrMsgWay?: "byMap" | "byRes",
         GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
@@ -36,7 +36,7 @@ export interface myRequestConfig extends AxiosRequestConfig {
     },
 }
 
-export type myResponseConfig = { config: myRequestConfig } & Omit<AxiosResponse, 'config'>
+export type IResponseCfg = { config: IRequestCfg } & Omit<AxiosResponse, 'config'>
 
 export interface IpendingReq {
     name: string;
@@ -60,7 +60,7 @@ export interface IpendingReq {
  * ServerNoResponse 服务器没有响应
  *
  */
-export interface IReqCfg {
+export interface IAutoRequestCfg {
     REQ_CONST: {
         // AuthOperationUrl: '',
         BaseUrl: string,
