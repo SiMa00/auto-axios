@@ -50,13 +50,18 @@ class AutoAxios<R, E> {
                 config.customedData = {}
             }
             
-            const loadingSwitch:1|0 = isNotEmpty(config.customedData?.GlobalLoadingSwitch)
-                ? config.customedData?.GlobalLoadingSwitch
-                : (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
+            // customedData 里存好值，res 里不用重复判断取值
+            let loadingSwitch:0|1
+            if (isEmpty(config.customedData?.GlobalLoadingSwitch)) {
+                loadingSwitch = (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
+                config.customedData!.GlobalLoadingSwitch = loadingSwitch
+            } else {
+                loadingSwitch = <0|1>config.customedData?.GlobalLoadingSwitch
+            }
             
-            const errorMsgSwitch:1|0 = isNotEmpty(config.customedData?.GlobalErrMsgSwitch)
-                ? config.customedData?.GlobalErrMsgSwitch
-                : (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+            if (isEmpty(config.customedData?.GlobalErrMsgSwitch)) {
+                config.customedData!.GlobalErrMsgSwitch = (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+            }
 
             if (loadingSwitch === 1) { // 开启了全局 Loading
                 this.handleLoading(true)
@@ -158,14 +163,8 @@ class AutoAxios<R, E> {
                 markIndex > -1 && AutoAxios.pendingRequest.splice(markIndex, 1)
             }
 
-            const hasCusData = response.config && isNotEmpty(response.config.customedData)
-            const loadingSwitch = hasCusData && isNotEmpty(response.config.customedData.GlobalLoadingSwitch)
-                ? response.config.customedData.GlobalLoadingSwitch
-                : (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
-            
-            const errorMsgSwitch = hasCusData && isNotEmpty(response.config.customedData.GlobalErrMsgSwitch)
-                ? response.config.customedData.GlobalErrMsgSwitch
-                : (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+            const loadingSwitch = response.config.customedData.GlobalLoadingSwitch
+            const errorMsgSwitch = response.config.customedData.GlobalErrMsgSwitch
             
             if (loadingSwitch === 1) { // 开启了全局 Loading
                 this.handleLoading(false)
