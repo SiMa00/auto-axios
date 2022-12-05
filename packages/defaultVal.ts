@@ -1,5 +1,5 @@
 
-import type { reqDefault } from "./InterReqCfg"
+import type { reqDefault } from "./reqTypes"
 
 
 export const reqDefaultValCfg = {
