@@ -5,46 +5,6 @@
 
 import type { AxiosRequestConfig, RawAxiosRequestHeaders, AxiosResponse } from 'axios'
 
-// laoding 对象接口
-export interface ILoad {
-    showLoadMask(): void;
-    closeLoadMask(): void;
-}
-// 错误码集合里的 错误对象
-export interface IErrItem {
-    retCode: string;
-    retMsg: string;
-}
-
-// 默认请求配置
-export interface IreqDefaultVal {
-    defaultHeader?: { [propName: string | number]: any },
-    defaultWay?: 'post' | 'get' | 'put' | 'delete'
-    post?: { [propName: string | number]: any },
-    get?: { [propName: string | number]: any },
-    xssProtection?: { [propName: string | number]: any },
-}
-export interface IRequestCfg extends AxiosRequestConfig {
-    customedData?: {
-        GetErrMsgWay?: "byMap" | "byRes",
-        GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
-        GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
-        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
-        IfNull2Empty?: boolean,
-        requestMark?: string,
-        // [propName: string | number]: any 
-    },
-}
-
-export type IResponseCfg = { config: IRequestCfg } & Omit<AxiosResponse, 'config'>
-
-export interface IpendingReq {
-    name: string;
-    cancel: Function;
-    pendingCancelSwitch?: Array<any>;
-}
-
-
 /** 自定义的 返回消息
  * EmptyUrl 请求url为空
  * EmptyResponseData 返回数据为空
@@ -101,6 +61,44 @@ export interface IAutoRequestCfg {
     // 返回 loadService 对象需要提供 closeLoadMask() + showLoadMask() 方法
     getLoadService?: () => ILoad;
     beforeReq?: (config:AxiosRequestConfig) => void;
+}
+
+// laoding 对象接口
+export interface ILoad {
+    showLoadMask(): void;
+    closeLoadMask(): void;
+}
+// 错误码集合里的 错误对象
+export interface IErrItem {
+    retCode: string;
+    retMsg: string;
+}
+
+// 默认请求配置
+export interface IreqDefaultVal {
+    defaultHeader?: { [propName: string | number]: any },
+    defaultWay?: 'post' | 'get' | 'put' | 'delete'
+    post?: { [propName: string | number]: any },
+    get?: { [propName: string | number]: any },
+    xssProtection?: { [propName: string | number]: any },
+}
+export interface IRequestCfg extends AxiosRequestConfig {
+    customedData?: {
+        GetErrMsgWay?: "byMap" | "byRes",
+        GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
+        GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
+        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
+        IfNull2Empty?: boolean,
+        requestMark?: string,
+        // [propName: string | number]: any 
+    },
+}
+export type IResponseCfg = { config: IRequestCfg } & Omit<AxiosResponse, 'config'>
+
+export interface IpendingReq {
+    name: string;
+    cancel: Function;
+    pendingCancelSwitch?: Array<any>;
 }
 
 
