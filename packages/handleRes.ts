@@ -9,7 +9,7 @@ function getMsgByCode(respCode:number|string, errorMapIn?:IErrMap):string {
         const retMsgObj = errorMapIn[key]
         return (retMsgObj && retMsgObj.retMsg)
     } else {
-       return 'ErrMapCodeMissing' // 错误码映射缺失 
+        return 'ErrMapCodeMissing' // 错误码映射缺失
     }
 }
 
@@ -59,10 +59,10 @@ function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErr
 }
 
 export function getAutoResult(
-    reqConfig:AutoRequestCfg, 
-    response:IRespConfig, 
-    errMsgFlag:boolean, errMap?:IErrMap, 
-    pendingReq?:Array<IpendingReq>
+    reqConfig:AutoRequestCfg,
+    response:IRespConfig,
+    errMsgFlag:boolean, errMap?:IErrMap,
+    pendingReq?:Array<IpendingReq>,
 ):AutoResp {
     const res0 = getRetData(reqConfig, response, errMap)
     if (res0.isOk === true) {

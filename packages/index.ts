@@ -6,19 +6,19 @@ import reqDefaultValCfg from "./defaultVal"
 import { getAutoResult } from "./handleRes"
 import type { AxiosInstance } from 'axios'
 // import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { 
-    AutoRequestCfg, 
-    ILoad, 
-    IRespConfig, 
-    IRequestConfig, 
-    AutoResp, 
-    IErrListItem, 
-    IpendingReq, 
-    IErrMap 
+import type {
+    AutoRequestCfg,
+    ILoad,
+    IRespConfig,
+    IRequestConfig,
+    AutoResp,
+    IErrListItem,
+    IpendingReq,
+    IErrMap,
 } from "./reqTypes"
 
 // TODO 测试完毕后，带泛型
-class AutoAxios<R> {
+class AutoAxios {
     private readonly instance: AxiosInstance
     private readonly loadService?: ILoad
 
@@ -169,7 +169,8 @@ class AutoAxios<R> {
 
         return config
     }
-    private reqError(error:any) {
+    // error:any
+    private reqError() {
         this.handleLoading(false)
         // TODO 开关 单个请求开关
         this.reqConfig.showTipBox('RequstFailed')
@@ -210,7 +211,7 @@ class AutoAxios<R> {
                 if (error.config.customedData.GlobalLoadingSwitch === 1) { // 开启过 loading
                     this.handleLoading(false)
                 }
-            } else { 
+            } else {
                 // 拿不到 requestMark 时的处理
                 AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
             }
@@ -294,7 +295,7 @@ class AutoAxios<R> {
         if (this.loadService && this.loadService.showLoadMask && this.loadService.closeLoadMask) {
             if (flag) {
                 // NProgress.start()
-                this.loadService.showLoadMask() 
+                this.loadService.showLoadMask()
             } else {
                 // NProgress.done()
                 this.loadService.closeLoadMask()
@@ -307,9 +308,9 @@ class AutoAxios<R> {
                 const response:IRespConfig = await this.instance(ajaxCfg)
                 if (response.status === 200 && response.data instanceof Blob) {
                     return {
-                        retCode: response.status, 
-                        retMsg: 'ok', 
-                        isOk: true, 
+                        retCode: response.status,
+                        retMsg: 'ok',
+                        isOk: true,
                         retData: response.data,
                         orgResData: response,
                     }
@@ -326,7 +327,7 @@ class AutoAxios<R> {
                 this.reqConfig.showTipBox('EmptyUrl')
             }
             
-            return Promise.reject<AutoResp>({ retCode:'', isOk: false, retMsg: 'emptyUrl', retData: {}, orgResData: {} }) 
+            return Promise.reject<AutoResp>({ retCode:'', isOk: false, retMsg: 'emptyUrl', retData: {}, orgResData: {} })
             // return new Promise(() => {}) // 中断Promise链
         }
     }
