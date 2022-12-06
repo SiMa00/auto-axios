@@ -1,11 +1,11 @@
 
-import { isEmpty, transNullChar } from './utils'
-import { reqDefaultValCfg } from "./defaultVal"
-import type { IAutoRequestCfg, IResponseCfg, IErrMap, Ires } from "./reqTypes"
+import { isEmpty, isNotEmpty, transNullChar } from './utils'
+import reqDefaultValCfg from "./defaultVal"
+import type { AutoRequestCfg, IRespConfig, IErrMap, AutoResp, IpendingReq } from "./reqTypes"
 
-function getMsgByCode(respDataCode:number|string, errorMapIn?:IErrMap):string {
+function getMsgByCode(respCode:number|string, errorMapIn?:IErrMap):string {
     if (errorMapIn) {
-        const key:string = respDataCode + ''
+        const key:string = respCode + ''
         const retMsgObj = errorMapIn[key]
         return (retMsgObj && retMsgObj.retMsg)
     } else {
@@ -14,10 +14,10 @@ function getMsgByCode(respDataCode:number|string, errorMapIn?:IErrMap):string {
 }
 
 // 处理返回数据
-export const getRetData = (reqConfig:IAutoRequestCfg, response:IResponseCfg, errMap?:IErrMap) => {
+function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErrMap) {
     const retCode = response.data[reqConfig.RET_FIELDS_CFG.RetCode]
     const retMsg = (response.data && response.data[reqConfig.RET_FIELDS_CFG.RetMsg]) || ''
-    const res:Ires = {
+    const res:AutoResp = {
         retCode,
         retMsg,
         total: 0,
@@ -56,4 +56,24 @@ export const getRetData = (reqConfig:IAutoRequestCfg, response:IResponseCfg, err
     }
 
     return res
+}
+
+export function handleResp(reqConfig:AutoRequestCfg, response:IRespConfig, errMsgFlag:boolean, errMap?:IErrMap, pendingReq?:Array<IpendingReq>) {
+    const res0 = getRetData(reqConfig, response, errMap)
+    if (res0.isOk === true) {
+        return Promise.resolve(res0)
+    } else {
+        if (errMsgFlag && pendingReq && pendingReq.length === 0) {
+            reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
+        }
+        
+        return Promise.resolve(res0)
+
+        // // 原来的代码
+        // if (reqConfig.REQ_CONST.LoginExpiredCode.includes(res0.retCode)) {
+        //     return new Promise(() => {}) // 中断Promise链
+        // } else {
+        //     return Promise.resolve(res0)
+        // }
+    }
 }

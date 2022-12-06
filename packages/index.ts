@@ -2,19 +2,31 @@
 
 
 import axios from 'axios'
+import { cloneDeep } from "lodash"
 import { isNotEmpty, isEmpty, deleteNull, isFunc, list2Map } from "./utils.js";
-import { reqDefaultValCfg } from "./defaultVal"
-import { getRetData } from "./handleRes"
+import reqDefaultValCfg from "./defaultVal"
+import { handleResp } from "./handleRes"
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
-import type { IAutoRequestCfg, ILoad, IResponseCfg, IRequestCfg, IErrListItem, IpendingReq, IErrMap } from "./reqTypes"
-// import qs from 'qs'
+import type { 
+    AutoRequestCfg, 
+    ILoad, 
+    IRespConfig, 
+    IRequestConfig, 
+    AutoResp, 
+    IErrListItem, 
+    IpendingReq, 
+    IErrMap 
+} from "./reqTypes"
 
 // TODO 测试完毕后，带泛型
 class AutoAxios<R> {
-    private instance: AxiosInstance
+    private readonly instance: AxiosInstance
     private readonly loadService?: ILoad
 
-    constructor(private readonly reqConfig: IAutoRequestCfg) {
+    private static errMap:IErrMap = {}
+    static pendingRequest:Array<IpendingReq> = [] // 针对发出去的请求，取消的 + 发不出去的请求，不算
+
+    constructor(private readonly reqConfig: AutoRequestCfg) {
         this.reqConfig = reqConfig
         
         if (reqConfig.getLoadService && isFunc(reqConfig.getLoadService)) {
@@ -34,18 +46,19 @@ class AutoAxios<R> {
         this.setInterceptors()
     }
 
+    setInterceptors(){
+        this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
+        this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
+    }
     
-    static pendingRequest?:Array<IpendingReq>
-    private static errMap:IErrMap
-
+    
     static setErrMap(eList: Array<IErrListItem>) {
         if (isNotEmpty(eList)) {
             AutoAxios.errMap = list2Map(eList, 'retCode')
         }
     }
 
-
-    private reqSuccess(config:IRequestCfg) {
+    private reqSuccess(config:IRequestConfig) {
         if (config) {
             const reqMethod = config.method
             const reqParams = config.params
@@ -94,17 +107,17 @@ class AutoAxios<R> {
             }
 
 
-            const i18nKey = this.reqConfig.RET_FIELDS_CFG.StorageLangKey
+            const i18nKey = this.reqConfig.RET_FIELDS_CFG.LangStorageKey
             const i18nVal = window.localStorage[i18nKey] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
-            const langFd = this.reqConfig.RET_FIELDS_CFG.HttpLangKey || reqDefaultValCfg.httpLangKey
+            const langFd = this.reqConfig.RET_FIELDS_CFG.LangHttpKey || reqDefaultValCfg.langHttpKey
             if (langFd) {
                 config.headers![langFd] = i18nVal
             }
             
             // 方法1 登录接口请求头不带 token
-            const tokenVal:string = window.localStorage[this.reqConfig.RET_FIELDS_CFG.StorageTokenKey] || ''
+            const tokenVal:string = window.localStorage[this.reqConfig.RET_FIELDS_CFG.TokenStorageKey] || ''
             if (isNotEmpty(tokenVal) && config.url !== this.reqConfig.REQ_CONST.LoginUrl) {
-                config.headers![this.reqConfig.RET_FIELDS_CFG.HttpTokenKey] = tokenVal
+                config.headers![this.reqConfig.RET_FIELDS_CFG.TokenHttpKey] = tokenVal
             }
             // 方法2 登录接口请求头不带 token
             // const hasPms = isNotEmpty(config.params)
@@ -159,51 +172,59 @@ class AutoAxios<R> {
     }
     private reqError(error) {
         this.handleLoading(false)
-        // TODO 开关
+        // TODO 开关 单个请求开关
         this.reqConfig.showTipBox('RequstFailed')
         return new Promise(() => {}) // 中断Promise链
     }
     
-    private respSuc(response:IResponseCfg) {
-        if (response.config && response.config.customedData) {
+    private respSuc(response:IRespConfig) {
+        if (response.config.customedData) {
             const { requestMark } = response.config.customedData
             if (AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0) {
                 const markIndex = AutoAxios.pendingRequest.findIndex(item => item.name === requestMark)
                 markIndex > -1 && AutoAxios.pendingRequest.splice(markIndex, 1)
             }
+        }
+        
+        const loadingSwitch = <0|1>response.config.customedData!.GlobalLoadingSwitch
+        const errorMsgSwitch = <0|1>response.config.customedData!.GlobalErrMsgSwitch
+        
+        if (loadingSwitch === 1) { // 开启了全局 Loading
+            this.handleLoading(false)
+        }
 
-            const loadingSwitch = response.config.customedData.GlobalLoadingSwitch
-            const errorMsgSwitch = response.config.customedData.GlobalErrMsgSwitch
-            
-            if (loadingSwitch === 1) { // 开启了全局 Loading
-                this.handleLoading(false)
-            }
-
-            if (response.status === 200 && response.data instanceof Blob) {
-                return Promise.resolve({ isOk: true, retData: response.data })
-            } else {
-                return this.handleRes(response, errorMsgSwitch === 1, AutoAxios.errMap, AutoAxios.pendingRequest)
-            }
+        if (response.status === 200 && response.data instanceof Blob) {
+            return Promise.resolve<AutoResp>({ 
+                retCode: response.status, 
+                retMsg: 'ok', 
+                isOk: true, 
+                retData: response.data,
+                orgResData: response,
+            })
+        } else {
+            return handleResp(this.reqConfig, response, errorMsgSwitch === 1, AutoAxios.errMap, AutoAxios.pendingRequest)
         }
     }
-    private respError(error: any) {
-        this.handleLoading(false)
-
+    private respError(error) {
         // 被取消的请求 => cancle 进来的: error.config + error.request 都是 undefined
         if (axios.isCancel(error)) {
             return new Promise(() => {}) // 中断Promise链
         } else { // 错误向下传递
-            if (error && error.config) {
+            if (error && error.config && error.config.customedData) {
                 if (AutoAxios.pendingRequest.length > 0) {
-                    const mIndex = AutoAxios.pendingRequest.findIndex(item => item.name === error.config.requestMark)
+                    const mIndex = AutoAxios.pendingRequest.findIndex(item => item.name === error.config.customedData.requestMark)
                     if (mIndex > -1) {
                         AutoAxios.pendingRequest.splice(mIndex, 1)
                     } else {
                         AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
                     }
                 }
+
+                if (error.config.customedData.GlobalLoadingSwitch === 1) { // 开启过 loading
+                    this.handleLoading(false)
+                }
             } else { // 拿不到 requestMark 时的处理
-                AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
+                AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
             }
 
             if (error && error.response && error.response.status) {
@@ -289,32 +310,51 @@ class AutoAxios<R> {
             }
         }
     }
-    private handleRes(response:IResponseCfg, errMsgFlag:boolean, errMap?:IErrMap, pendingReq?:Array<IpendingReq>) {
-        const res0 = getRetData(this.reqConfig, response, errMap)
-        if (res0.isOk !== true) {
-            if (errMsgFlag && isNotEmpty(AutoAxios.pendingRequest)) {
-                this.reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
-            }
-            
-            if (this.reqConfig.REQ_CONST.LoginExpiredCode.includes(res0.retCode)) {
-                return new Promise(() => {}) // 中断Promise链
-            } else {
-                return res0
+    private async httpUtil(ajaxCfg:IRequestConfig):Promise<AutoResp> {
+        if (ajaxCfg && ajaxCfg.url) {
+            try {
+                const res:AutoResp = await this.instance(ajaxCfg)
+                return Promise.resolve(res)
+            } catch (err) {
+                return Promise.reject(err)
             }
         } else {
-            return res0
+            const msgSwitch = ajaxCfg.customedData?.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch
+            if (msgSwitch === 1) {
+                this.reqConfig.showTipBox('EmptyUrl')
+            }
+            
+            const obj:AutoResp = { retCode:'', isOk: false, retMsg: 'emptyUrl', retData: {}, orgResData: {} }
+            return Promise.reject(obj) 
+            // return new Promise(() => { }) // 中断Promise链
         }
     }
 
-
-    setInterceptors(){
-        this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
-        this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
-    }
-
-
-    request(options:AxiosRequestConfig){
-        return this.instance(options)
+    // csrfSwitch === '1' 增删改操作 需鉴权; csrfSwitch !=='1' 无需鉴权
+    async request(options:IRequestConfig){
+        const csrfFlag = options && options.customedData && (options.customedData.CsrfSwitch === 1)
+        if (csrfFlag) {
+            try {
+                const resp = await this.httpUtil({
+                    url: this.reqConfig.REQ_CONST.AuthOperationUrl,
+                    method: options.method,
+                    headers: options.headers,
+                })
+                const csrf = {
+                    csrfToken: resp.retData.csrfToken,
+                    csrfTokenKey: resp.retData.csrfTokenKey,
+                    csrfTraceId: resp.retData.csrfTraceId,
+                }
+                const newOps = cloneDeep(options)
+                newOps.headers = { ...(newOps.headers), ...csrf }
+                const res = await this.httpUtil(newOps)
+                return Promise.resolve(res)
+            } catch (err) {
+                return Promise.reject(err)
+            }
+        } else {
+            return this.httpUtil(options)
+        }
     }
 }
 
