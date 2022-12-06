@@ -4,7 +4,8 @@ import { cloneDeep } from "lodash"
 import { isNotEmpty, isEmpty, deleteNull, isFunc, list2Map } from "./utils.js";
 import reqDefaultValCfg from "./defaultVal"
 import { getAutoResult } from "./handleRes"
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import type { AxiosInstance } from 'axios'
+// import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import type { 
     AutoRequestCfg, 
     ILoad, 

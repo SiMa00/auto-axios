@@ -3,7 +3,7 @@
 // 方式1 byMap: 不论有无 respData 的返回消息,直接根据返回码 取 错误映射的消息
 // 方式2 byRes: 先取 respData 的返回消息,若无,再取 错误映射的消息
 
-import type { AxiosRequestConfig, RawAxiosRequestHeaders, AxiosResponse } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 /** 自定义的 返回消息
  * EmptyUrl 请求url为空
