@@ -58,16 +58,21 @@ function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErr
     return res
 }
 
-export function handleResp(reqConfig:AutoRequestCfg, response:IRespConfig, errMsgFlag:boolean, errMap?:IErrMap, pendingReq?:Array<IpendingReq>) {
+export function getAutoResult(
+    reqConfig:AutoRequestCfg, 
+    response:IRespConfig, 
+    errMsgFlag:boolean, errMap?:IErrMap, 
+    pendingReq?:Array<IpendingReq>
+):AutoResp {
     const res0 = getRetData(reqConfig, response, errMap)
     if (res0.isOk === true) {
-        return Promise.resolve(res0)
+        return res0
     } else {
         if (errMsgFlag && pendingReq && pendingReq.length === 0) {
             reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
         }
         
-        return Promise.resolve(res0)
+        return res0
 
         // // 原来的代码
         // if (reqConfig.REQ_CONST.LoginExpiredCode.includes(res0.retCode)) {
