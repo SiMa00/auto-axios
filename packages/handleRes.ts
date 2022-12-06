@@ -1,5 +1,5 @@
 
-import { isEmpty, isNotEmpty, transNullChar } from './utils'
+import { isEmpty, transNullChar } from './utils'
 import reqDefaultValCfg from "./defaultVal"
 import type { AutoRequestCfg, IRespConfig, IErrMap, AutoResp, IpendingReq } from "./reqTypes"
 
@@ -14,7 +14,7 @@ function getMsgByCode(respCode:number|string, errorMapIn?:IErrMap):string {
 }
 
 // 处理返回数据
-function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErrMap) {
+function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErrMap):AutoResp {
     const retCode = response.data[reqConfig.RET_FIELDS_CFG.RetCode]
     const retMsg = (response.data && response.data[reqConfig.RET_FIELDS_CFG.RetMsg]) || ''
     const res:AutoResp = {
