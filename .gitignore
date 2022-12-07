@@ -26,3 +26,15 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# /packages
+# /public
+# /src
+# .browserslistrc
+# .editorconfig
+# .eslintignore
+# .eslintrc.js
+# babel.config.js
+# jsconfig.json
+# README.md
+# vue.config.js

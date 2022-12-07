@@ -1,0 +1,17 @@
+{
+    "name": "auto-axios",
+    "version": "0.0.1",
+    "files": ["dist"],
+    "module": "./dist/build.es.ts",
+    "main": "./dist/build.umd.ts",
+    "exports": {
+        ".": {
+            "import": "./dist/build.es.ts",
+            "require": "./dist/build.umd.ts"
+        }
+    },
+    "keywords": ["axios", "auto-axios"],
+    "author": "SiMa00",
+    "private": false,
+	"license": "ISC"
+}
