@@ -30,11 +30,12 @@ coverage
 # /packages
 # /public
 # /src
-# .browserslistrc
-# .editorconfig
 # .eslintignore
-# .eslintrc.js
-# babel.config.js
-# jsconfig.json
-# README.md
-# vue.config.js
+# .eslintrc.cjs
+# index.html
+# package-dist.json
+# tsconfig.config.json
+# tsconfig.json
+# vite.config.ts
+
+# env.d.ts
