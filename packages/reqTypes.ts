@@ -31,7 +31,7 @@ export interface AutoRequestCfg {
         Timeout?: number, // s; window.systemCfg.reqTimeout, // m * s
         DefaultLang?: string,
     }
-    REQ_SWITCH: {
+    REQ_SWITCH?: {
         GetErrMsgWay?: "byMap" | "byRes",
         GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
         GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭

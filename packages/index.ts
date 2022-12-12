@@ -45,7 +45,7 @@ class AutoAxios {
         this.setInterceptors()
     }
 
-    setInterceptors(){
+    private setInterceptors(){
         this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
         this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
     }
@@ -109,7 +109,7 @@ class AutoAxios {
             const i18nKey = this.reqConfig.RET_FIELDS_CFG.LangStorageKey
             const i18nVal = window.localStorage[i18nKey] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
             const langFd = this.reqConfig.RET_FIELDS_CFG.LangHttpKey || reqDefaultValCfg.langHttpKey
-            if (langFd) {
+            if (langFd && i18nVal) {
                 config.headers![langFd] = i18nVal
             }
             
