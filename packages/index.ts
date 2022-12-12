@@ -74,14 +74,14 @@ class AutoAxios {
             // customedData 里存好值，res 里不用重复判断取值
             let loadingSwitch:0|1
             if (isEmpty(config.customedData?.GlobalLoadingSwitch)) {
-                loadingSwitch = (this.reqConfig.REQ_SWITCH.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
+                loadingSwitch = (this.reqConfig.REQ_SWITCH?.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
                 config.customedData!.GlobalLoadingSwitch = loadingSwitch
             } else {
                 loadingSwitch = <0|1>config.customedData?.GlobalLoadingSwitch
             }
             
             if (isEmpty(config.customedData?.GlobalErrMsgSwitch)) {
-                config.customedData!.GlobalErrMsgSwitch = (this.reqConfig.REQ_SWITCH.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+                config.customedData!.GlobalErrMsgSwitch = (this.reqConfig.REQ_SWITCH?.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
             }
 
             if (loadingSwitch === 1) { // 开启了全局 Loading
@@ -133,7 +133,7 @@ class AutoAxios {
             // }
             
             /** ************************************** 处理重复请求 start  **************************************/
-            if (this.reqConfig.REQ_SWITCH.IfCancelRepeatpReq === 1) { // 取消重复请求
+            if (this.reqConfig.REQ_SWITCH?.IfCancelRepeatpReq === 1) { // 取消重复请求
                 const { url, method, data = {}, params = {} } = config
                 // const { url, method, data = {}, params = {}, pendingCancelSwitch = true } = config
                 // // 将数据转为JSON字符串格式，后面比较好对比;
