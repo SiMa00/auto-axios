@@ -36,7 +36,7 @@ function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErr
         // 方式1: 先取 respData 的返回消息,若无,再取 错误映射的消息
         // 方式2: 不论有无 respData 的返回消息,直接根据返回码 取 错误映射的消息
         let finalMsg = ''
-        const msgWay = reqConfig.REQ_SWITCH.GetErrMsgWay || reqDefaultValCfg.getErrMsgWay
+        const msgWay = reqConfig.REQ_SWITCH?.GetErrMsgWay || reqDefaultValCfg.getErrMsgWay
         if (msgWay === 'byMap') {
             finalMsg = getMsgByCode(retCode, errMap)
         } else {

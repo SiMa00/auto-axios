@@ -32,10 +32,10 @@ coverage
 # /src
 # .eslintignore
 # .eslintrc.cjs
+# env.d.ts
 # index.html
 # package-dist.json
 # tsconfig.config.json
 # tsconfig.json
 # vite.config.ts
 
-# env.d.ts

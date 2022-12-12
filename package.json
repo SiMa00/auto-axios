@@ -1,7 +1,26 @@
 {
   "name": "auto-axios",
   "version": "1.0.0",
-  "private": true,
+  "private": false,
+  "description": "auto config axios with map",
+
+  "main": "./packages/index.ts",
+  "exports": {
+    ".": {
+      "types": {
+        "require": "./index.d.cts",
+        "default": "./index.d.ts"
+      },
+      "default": {
+        "require": "./dist/AutoAxios.umd.cjs",
+        "default": "./dist/AutoAxios.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "type": "module",
+  "types": "index.d.ts",
+
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only",
@@ -12,7 +31,7 @@
     "lintpag": "eslint packages/**/*.* --fix --ignore-path .gitignore",
     "lintdev": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
-  "types": ["lib/index.d.ts"],
+  "keywords": ["auto axios", "auto-axios", "auto config axios"],
   "dependencies": {
     "axios": "^1.2.0",
     "lodash": "^4.17.21",
