@@ -1,7 +1,7 @@
 
-import { isEmpty, transNullChar } from './utils'
-import reqDefaultValCfg from "./defaultVal"
-import type { AutoRequestCfg, IRespConfig, IErrMap, AutoResp, IpendingReq } from "./reqTypes"
+import { isEmpty, transNullChar, handleMask1 } from './utils'
+import { DEFAULT_VAL } from "./defaultCfg"
+import type { IAutoRequestCfg, IRespConfig, IErrMap, IAutoResp, IpendingReq } from "./reqTypes"
 
 function getMsgByCode(respCode:number|string, errorMapIn?:IErrMap):string {
     if (errorMapIn) {
@@ -14,10 +14,10 @@ function getMsgByCode(respCode:number|string, errorMapIn?:IErrMap):string {
 }
 
 // 处理返回数据
-function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErrMap):AutoResp {
+function getRetData(reqConfig:IAutoRequestCfg, response:IRespConfig, errMap?:IErrMap):IAutoResp {
     const retCode = response.data[reqConfig.RET_FIELDS_CFG.RetCode]
     const retMsg = (response.data && response.data[reqConfig.RET_FIELDS_CFG.RetMsg]) || ''
-    const res:AutoResp = {
+    const res:IAutoResp = {
         retCode,
         retMsg,
         total: 0,
@@ -36,7 +36,7 @@ function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErr
         // 方式1: 先取 respData 的返回消息,若无,再取 错误映射的消息
         // 方式2: 不论有无 respData 的返回消息,直接根据返回码 取 错误映射的消息
         let finalMsg = ''
-        const msgWay = reqConfig.REQ_SWITCH?.GetErrMsgWay || reqDefaultValCfg.getErrMsgWay
+        const msgWay = reqConfig.REQ_SWITCH?.GetErrMsgWay || DEFAULT_VAL.GetErrMsgWay
         if (msgWay === 'byMap') {
             finalMsg = getMsgByCode(retCode, errMap)
         } else {
@@ -59,16 +59,17 @@ function getRetData(reqConfig:AutoRequestCfg, response:IRespConfig, errMap?:IErr
 }
 
 export function getAutoResult(
-    reqConfig:AutoRequestCfg,
+    reqConfig:IAutoRequestCfg,
     response:IRespConfig,
     errMsgFlag:boolean, errMap?:IErrMap,
     pendingReq?:Array<IpendingReq>,
-):AutoResp {
+):IAutoResp {
     const res0 = getRetData(reqConfig, response, errMap)
     if (res0.isOk === true) {
         return res0
     } else {
-        if (errMsgFlag && pendingReq && pendingReq.length === 0) {
+
+        if (errMsgFlag && pendingReq && pendingReq.length === 0 && handleMask1(reqConfig.REQ_CONST.MaskClassNames)) {
             reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
         }
         

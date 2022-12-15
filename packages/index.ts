@@ -1,44 +1,43 @@
 
 import axios from 'axios'
 import { cloneDeep } from "lodash"
-import { isNotEmpty, isEmpty, deleteNull, isFunc, list2Map } from "./utils.js";
-import reqDefaultValCfg from "./defaultVal"
+import { isNotEmpty, isEmpty, deleteNull, isFunc, list2Map, handleMask1 } from "./utils";
+import { DEFAULT_VAL } from "./defaultCfg"
 import { getAutoResult } from "./handleRes"
 import type { AxiosInstance } from 'axios'
-// import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 import type {
-    AutoRequestCfg,
+    IAutoRequestCfg,
     ILoad,
     IRespConfig,
     IRequestConfig,
-    AutoResp,
+    IAutoResp,
     IErrListItem,
     IpendingReq,
     IErrMap,
 } from "./reqTypes"
+import { ESwitch } from "./reqTypes"
 
-// TODO 测试完毕后，带泛型
 class AutoAxios {
     private readonly instance: AxiosInstance
-    private readonly loadService?: ILoad
 
     private static errMap:IErrMap = {} // 手动调用 setErrMap 设置
+    private static loadService?:ILoad
     static pendingRequest:Array<IpendingReq> = [] // 针对发出去的请求，取消的 + 发不出去的请求，不算
 
-    constructor(private readonly reqConfig: AutoRequestCfg) {
+    constructor(private readonly reqConfig: IAutoRequestCfg) {
         this.reqConfig = reqConfig
         
         if (reqConfig.getLoadService && isFunc(reqConfig.getLoadService)) {
-            this.loadService = reqConfig.getLoadService()
+            AutoAxios.loadService = reqConfig.getLoadService()
         }
 
         this.instance = axios.create({
             baseURL: reqConfig.REQ_CONST.BaseUrl,
             headers: {
-                ...(reqDefaultValCfg.xssProtection),
+                ...(DEFAULT_VAL.XssProtection),
                 ...reqConfig.REQ_WAYS_CFG?.DefaultHeader,
             },
-            timeout: reqConfig.REQ_CONST.Timeout || reqDefaultValCfg.timeout,
+            timeout: reqConfig.REQ_CONST.Timeout || DEFAULT_VAL.Timeout,
             withCredentials: true, // 跨域携带 cookie
         })
 
@@ -46,11 +45,11 @@ class AutoAxios {
     }
 
     private setInterceptors(){
-        this.instance.interceptors.request.use(this.reqSuccess, this.reqError) // 请求拦截器
-        this.instance.interceptors.response.use(this.respSuc, this.respError) // 响应拦截器
+        // 不 bind 的话，函数里面的 this 会有问题
+        this.instance.interceptors.request.use(this.reqSuccess.bind(this), this.reqError.bind(this)) // 请求拦截器
+        this.instance.interceptors.response.use(this.respSuc.bind(this), this.respError.bind(this)) // 响应拦截器
     }
-    
-    
+
     static setErrMap(eList: Array<IErrListItem>) {
         if (isNotEmpty(eList)) {
             AutoAxios.errMap = list2Map(eList, 'retCode')
@@ -72,19 +71,19 @@ class AutoAxios {
             }
             
             // customedData 里存好值，res 里不用重复判断取值
-            let loadingSwitch:0|1
-            if (isEmpty(config.customedData?.GlobalLoadingSwitch)) {
-                loadingSwitch = (this.reqConfig.REQ_SWITCH?.GlobalLoadingSwitch || reqDefaultValCfg.globalLoadingSwitch)
-                config.customedData!.GlobalLoadingSwitch = loadingSwitch
+            let loadingSwitch:ESwitch
+            if (config.customedData?.GlobalLoadingSwitch) {
+                loadingSwitch = <ESwitch>config.customedData?.GlobalLoadingSwitch
             } else {
-                loadingSwitch = <0|1>config.customedData?.GlobalLoadingSwitch
+                loadingSwitch = (this.reqConfig.REQ_SWITCH?.GlobalLoadingSwitch || DEFAULT_VAL.GlobalLoadingSwitch)
+                config.customedData!.GlobalLoadingSwitch = loadingSwitch
             }
             
             if (isEmpty(config.customedData?.GlobalErrMsgSwitch)) {
-                config.customedData!.GlobalErrMsgSwitch = (this.reqConfig.REQ_SWITCH?.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch)
+                config.customedData!.GlobalErrMsgSwitch = (this.reqConfig.REQ_SWITCH?.GlobalErrMsgSwitch || DEFAULT_VAL.GlobalErrMsgSwitch)
             }
 
-            if (loadingSwitch === 1) { // 开启了全局 Loading
+            if (loadingSwitch === ESwitch.On) { // 开启了全局 Loading
                 this.handleLoading(true)
             }
             
@@ -107,8 +106,8 @@ class AutoAxios {
 
 
             const i18nKey = this.reqConfig.RET_FIELDS_CFG.LangStorageKey
-            const i18nVal = window.localStorage[i18nKey] || this.reqConfig.REQ_CONST.DefaultLang || reqDefaultValCfg.defaultLang
-            const langFd = this.reqConfig.RET_FIELDS_CFG.LangHttpKey || reqDefaultValCfg.langHttpKey
+            const i18nVal = window.localStorage[i18nKey] || this.reqConfig.REQ_CONST.DefaultLang || DEFAULT_VAL.DefaultLang
+            const langFd = this.reqConfig.RET_FIELDS_CFG.LangHttpKey || DEFAULT_VAL.LangHttpKey
             if (langFd && i18nVal) {
                 config.headers![langFd] = i18nVal
             }
@@ -133,7 +132,8 @@ class AutoAxios {
             // }
             
             /** ************************************** 处理重复请求 start  **************************************/
-            if (this.reqConfig.REQ_SWITCH?.IfCancelRepeatpReq === 1) { // 取消重复请求
+            const reptReqFlag = config.customedData?.IfCancelDupReq || this.reqConfig.REQ_SWITCH?.IfCancelDupReq || DEFAULT_VAL.IfCancelDupReq
+            if (reptReqFlag === ESwitch.On) { // 取消重复请求
                 const { url, method, data = {}, params = {} } = config
                 // const { url, method, data = {}, params = {}, pendingCancelSwitch = true } = config
                 // // 将数据转为JSON字符串格式，后面比较好对比;
@@ -173,21 +173,25 @@ class AutoAxios {
     private reqError() {
         this.handleLoading(false)
         // TODO 开关 单个请求开关
-        this.reqConfig.showTipBox('RequstFailed')
+        const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+        if (AutoAxios.pendingRequest.length === 0 && mask1Flag) {
+            this.reqConfig.showTipBox('RequstFailed')
+        }
+        
         return new Promise(() => {}) // 中断Promise链
     }
     
     private respSuc(response:IRespConfig) {
         if (response.config.customedData) {
             const { requestMark } = response.config.customedData
-            if (AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0) {
+            if (AutoAxios.pendingRequest.length > 0) {
                 const markIndex = AutoAxios.pendingRequest.findIndex(item => item.name === requestMark)
                 markIndex > -1 && AutoAxios.pendingRequest.splice(markIndex, 1)
             }
         }
         
-        const loadingSwitch = <0|1>response.config.customedData!.GlobalLoadingSwitch
-        if (loadingSwitch === 1) { // 开启了全局 Loading
+        const loadingSwitch = <ESwitch>response.config.customedData!.GlobalLoadingSwitch
+        if (loadingSwitch === ESwitch.On) { // 开启了全局 Loading
             this.handleLoading(false)
         }
 
@@ -198,6 +202,8 @@ class AutoAxios {
         if (axios.isCancel(error)) {
             return new Promise(() => {}) // 中断Promise链
         } else { // 错误向下传递
+            const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+            
             if (error && error.config && error.config.customedData) {
                 if (AutoAxios.pendingRequest.length > 0) {
                     const mIndex = AutoAxios.pendingRequest.findIndex(item => item.name === error.config.customedData.requestMark)
@@ -208,12 +214,12 @@ class AutoAxios {
                     }
                 }
 
-                if (error.config.customedData.GlobalLoadingSwitch === 1) { // 开启过 loading
+                if (error.config.customedData.GlobalLoadingSwitch === ESwitch.On) { // 开启过 loading
                     this.handleLoading(false)
                 }
             } else {
                 // 拿不到 requestMark 时的处理
-                AutoAxios.pendingRequest && AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
+                AutoAxios.pendingRequest.length > 0 && AutoAxios.pendingRequest.splice(0, 1)
             }
 
             if (error && error.response && error.response.status) {
@@ -221,8 +227,8 @@ class AutoAxios {
                 // that falls out of the range of 2xx
                 const hData = error.response && error.response.data
                 
-                const retCode = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetCode]) || error.response.status || ''
-                const retMsg = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetMsg]) || error.response.statusText || ''
+                const retCode = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetCode]) || error.response.status
+                const retMsg = (hData && hData[this.reqConfig.RET_FIELDS_CFG.RetMsg])
                 const retData = hData || {}
 
                 let tip = ''
@@ -234,17 +240,17 @@ class AutoAxios {
                     tip = 'SystemError'
                 }
 
-                if (AutoAxios.pendingRequest.length === 0) {
+                if (AutoAxios.pendingRequest.length === 0 && mask1Flag) {
                     // 给用户的提示，要方便理解，后台返回的消息展示上去的话，可能不太容易理解
                     this.reqConfig.showTipBox(
-                        `${(hData && hData[this.reqConfig.RET_FIELDS_CFG.RetMsg]) || tip}`,
+                        `${retMsg || tip}`,
                         retCode,
                         error.response && error.response.status,
                         error.response,
                     )
                 }
 
-                return Promise.reject<AutoResp>({
+                return Promise.resolve<IAutoResp>({
                     retCode,
                     retMsg,
                     retData,
@@ -254,11 +260,11 @@ class AutoAxios {
             } else if (error.request) {
                 // The request was made but no response was received
                 const msgRes = error.message || 'ServerNoResponse'
-                if (AutoAxios.pendingRequest.length === 0) {
+                if (AutoAxios.pendingRequest.length === 0 && mask1Flag) {
                     this.reqConfig.showTipBox('ServerNoResponse', '', error.response && error.response.status, error)
                 }
 
-                return Promise.reject<AutoResp>({
+                return Promise.resolve<IAutoResp>({
                     retCode: '',
                     retMsg: msgRes,
                     retData: {},
@@ -267,19 +273,19 @@ class AutoAxios {
                 })
             } else {
                 // Something happened in setting up the request that triggered an Error
-                const msg = error.message || ''
+                const msg = error.message
                 let newMsg = ''
                 if (error && error.config && error.config.timeout === this.reqConfig.REQ_CONST.Timeout) { // 请求超时
                     newMsg = 'RequestTimeout'
                 } else {
-                    newMsg = 'SystemError'
+                    newMsg = 'RequestError'
                 }
 
-                if (AutoAxios.pendingRequest.length === 0) {
+                if (AutoAxios.pendingRequest.length === 0 && mask1Flag) {
                     this.reqConfig.showTipBox(newMsg, '', error.response && error.response.status, error)
                 }
 
-                return Promise.reject<AutoResp>({
+                return Promise.resolve<IAutoResp>({
                     retCode: '',
                     retMsg: msg || newMsg,
                     retData: {},
@@ -292,17 +298,17 @@ class AutoAxios {
 
     // flag: true show loading
     private handleLoading(flag:boolean):void {
-        if (this.loadService && this.loadService.showLoadMask && this.loadService.closeLoadMask) {
+        if (AutoAxios.loadService) {
             if (flag) {
                 // NProgress.start()
-                this.loadService.showLoadMask()
+                AutoAxios.loadService.showLoadMask()
             } else {
                 // NProgress.done()
-                this.loadService.closeLoadMask()
+                AutoAxios.loadService.closeLoadMask()
             }
         }
     }
-    private async httpUtil(ajaxCfg:IRequestConfig):Promise<AutoResp> {
+    private async httpUtil(ajaxCfg:IRequestConfig):Promise<IAutoResp> {
         if (ajaxCfg && ajaxCfg.url) {
             try {
                 const response:IRespConfig = await this.instance(ajaxCfg)
@@ -315,26 +321,28 @@ class AutoAxios {
                         orgResData: response,
                     }
                 } else {
-                    const errorMsgSwitch = <0|1>response.config.customedData!.GlobalErrMsgSwitch
-                    return getAutoResult(this.reqConfig, response, errorMsgSwitch === 1, AutoAxios.errMap, AutoAxios.pendingRequest)
+                    const errorMsgSwitch = <ESwitch>response.config.customedData!.GlobalErrMsgSwitch
+                    return getAutoResult(this.reqConfig, response, errorMsgSwitch === ESwitch.On, AutoAxios.errMap, AutoAxios.pendingRequest)
                 }
             } catch (err) {
-                return Promise.reject(err)
+                return Promise.resolve<IAutoResp>({ retCode:'', isOk: false, retMsg: 'RequestError', retData: {}, orgResData: { err } })
             }
         } else {
-            const msgSwitch = ajaxCfg.customedData?.GlobalErrMsgSwitch || reqDefaultValCfg.globalErrMsgSwitch
-            if (msgSwitch === 1) {
-                this.reqConfig.showTipBox('EmptyUrl')
+            const msgSwitch = ajaxCfg.customedData?.GlobalErrMsgSwitch || DEFAULT_VAL.GlobalErrMsgSwitch
+            if (msgSwitch === ESwitch.On) {
+                const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+                mask1Flag && this.reqConfig.showTipBox('EmptyUrl')
             }
             
-            return Promise.reject<AutoResp>({ retCode:'', isOk: false, retMsg: 'emptyUrl', retData: {}, orgResData: {} })
+            return Promise.resolve<IAutoResp>({ retCode:'', isOk: false, retMsg: 'emptyUrl', retData: {}, orgResData: {} })
             // return new Promise(() => {}) // 中断Promise链
         }
     }
 
     // csrfSwitch === '1' 增删改操作 需鉴权; csrfSwitch !=='1' 无需鉴权
     async http(options:IRequestConfig){
-        if (options && options.customedData && (options.customedData.CsrfSwitch === 1)) {
+        
+        if (options && options.customedData && (options.customedData.CsrfSwitch === ESwitch.On)) {
             try {
                 const resp = await this.httpUtil({
                     url: this.reqConfig.REQ_CONST.AuthOperationUrl,
@@ -351,10 +359,10 @@ class AutoAxios {
                 const res = await this.httpUtil(newOps)
                 return Promise.resolve(res)
             } catch (err) {
-                return Promise.reject(err)
+                return Promise.resolve<IAutoResp>({ retCode:'', isOk: false, retMsg: 'RequestError', retData: {}, orgResData: { err } })
             }
         } else {
-            return this.httpUtil(options)
+            return await this.httpUtil(options)
         }
     }
 }

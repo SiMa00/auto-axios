@@ -15,8 +15,8 @@ export default defineConfig({
         // outDir: "lib-name", // 默认 dist
         lib: { //库编译模式配置
             entry: path.resolve(__dirname, './packages/index.ts'), // 指定编译入口文件
-            name: 'AutoAxios',
-            fileName: 'AutoAxios'
+            name: 'auto-axios',
+            fileName: 'auto-axios'
             // fileName: (format) => `build.${format}.ts`
         },
         rollupOptions: { // rollup打包配置

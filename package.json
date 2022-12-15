@@ -1,23 +1,11 @@
 {
   "name": "auto-axios",
-  "version": "1.0.0",
+  "version": "0.0.44",
   "private": false,
   "description": "auto config axios with map",
 
-  "main": "./packages/index.ts",
-  "exports": {
-    ".": {
-      "types": {
-        "require": "./index.d.cts",
-        "default": "./index.d.ts"
-      },
-      "default": {
-        "require": "./dist/AutoAxios.umd.cjs",
-        "default": "./dist/AutoAxios.js"
-      }
-    },
-    "./package.json": "./package.json"
-  },
+  "main": "index.js",
+  "files": ["dist", "index.d.ts"],
   "type": "module",
   "types": "index.d.ts",
 

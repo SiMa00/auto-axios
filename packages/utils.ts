@@ -1,5 +1,6 @@
 
-import type { objAny } from "./reqTypes"
+import { DEFAULT_VAL } from "./defaultCfg";
+import type { IObjAny } from "./reqTypes"
 
 export function isEmpty<T>(b:T):boolean {
     if (b == null) {
@@ -24,8 +25,8 @@ export function isNotEmpty<T>(b:T):boolean {
 }
 
 
-export function list2Map(list: Array<objAny>, key:string|number = 'id') {
-    const map:objAny = {}
+export function list2Map(list: Array<IObjAny>, key:string|number = 'id') {
+    const map:IObjAny = {}
     if (list) {
         for (let index = 0; index < list.length; index++) {
             const val = list[index][key]
@@ -45,7 +46,7 @@ export function isFunc<T>(fn:T) {
 export function isAsyncFunc<T>(fn:T) {
     return Object.prototype.toString.call(fn) === "[object AsyncFunction]"
 }
-export function isObject(obj:objAny) {
+export function isObject(obj:IObjAny) {
     return Object.prototype.toString.call(obj) === "[object Object]"
 }
 export function isString(str:string) {
@@ -62,9 +63,9 @@ export function isNumber(n:number) {
 }
 
 // 把 返回结果里 带 空的，转成 undefined; 方便antd undefined时显示 placeHolder
-export function transNullChar(obj:objAny, transUndefined:boolean = true) {
+export function transNullChar(obj:IObjAny, transUndefined:boolean = true) {
     if (obj && isObject(obj)) {
-        const temObj:objAny = {}
+        const temObj:IObjAny = {}
 
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
@@ -86,9 +87,9 @@ export function transNullChar(obj:objAny, transUndefined:boolean = true) {
 
 // trans2EmptyChar 是否需要把 null + Undefined + '' 的值转成 空字符串
 // 默认不转 空的话，不会加入参数里
-export function deleteNull(obj:objAny, trans2EmptyChar:boolean = false, trim:boolean = true) {
+export function deleteNull(obj:IObjAny, trans2EmptyChar:boolean = false, trim:boolean = true) {
     if (obj && isObject(obj)) {
-        const temObj:objAny = {}
+        const temObj:IObjAny = {}
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
                 const val = obj[key]
@@ -114,4 +115,19 @@ export function deleteNull(obj:objAny, trans2EmptyChar:boolean = false, trim:boo
     } else {
         return obj
     }
+}
+// true 放开不控制 弹框; false 不能再弹框了
+export function handleMask1(maskClassNames?:Array<string>) {
+    let flag = true
+    const classArr = maskClassNames || DEFAULT_VAL.MaskClassNames
+    for (let i = 0; i < classArr.length; i++) {
+        const ele = classArr[i]
+        const dom = document.querySelector(ele)
+        if (dom) {
+            flag = false
+        }
+        
+    }
+    
+    return flag
 }

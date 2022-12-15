@@ -3,7 +3,72 @@
 // 方式1 byMap: 不论有无 respData 的返回消息,直接根据返回码 取 错误映射的消息
 // 方式2 byRes: 先取 respData 的返回消息,若无,再取 错误映射的消息
 
-import type { AxiosRequestConfig, AxiosResponse } from 'axios'
+import type { AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios'
+// import type { AxiosError } from 'axios'
+
+export enum ESwitch {
+    On = '1', // 开启的 值
+    Off = '0',  // 关闭的 值
+}
+export interface IObjAny { [propName: string | number]: any }
+export interface IReqDefaultVal {
+    Timeout: number,
+    DefaultLang: string,
+    MaskClassNames: Array<string>,
+
+    GetErrMsgWay: "byMap"|"byRes",
+    GlobalErrMsgSwitch: ESwitch,
+    GlobalLoadingSwitch: ESwitch,
+    IfCancelDupReq: ESwitch,
+
+    LangHttpKey: string,
+    DefaultReqWay: 'post' | 'get' | 'put' | 'delete'
+    Post: IObjAny,
+    Get: IObjAny,
+    XssProtection: IObjAny,
+}
+/************************************ 分割线 *************************************/ 
+
+// laoding 对象接口
+export interface ILoad {
+    showLoadMask(): void;
+    closeLoadMask(): void;
+}
+// 错误码集合里的 错误对象
+export interface IErrListItem {
+    retCode: string;
+    retMsg: string;
+}
+export interface IErrMap { [propName: string | number]: IErrListItem }
+
+// 发起http入参类型 / 拦截器 config 类型
+export interface IRequestConfig extends AxiosRequestConfig {
+    customedData?: {
+        GetErrMsgWay?: "byMap"|"byRes",
+        GlobalErrMsgSwitch?: ESwitch, // 全局错误消息 提示开关; 1 开启; 0 关闭
+        GlobalLoadingSwitch?: ESwitch, // 全局等待层 开关; 1 开启; 0 关闭
+        IfCancelDupReq?: ESwitch, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
+        IfNull2Empty?: boolean,
+        CsrfSwitch?: ESwitch, // 1 开启
+        requestMark?: string,
+    },
+}
+export type IRespConfig = { config: IRequestConfig } & Omit<AxiosResponse, 'config'>
+
+export interface IpendingReq {
+    name: string;
+    cancel: Function;
+    pendingCancelSwitch?: Array<any>;
+}
+
+export interface IAutoResp {
+    retCode: number|string,
+    retMsg:string,
+    retData: IObjAny,
+    orgResData: IObjAny,
+    isOk: boolean, // 增加判断是否成功的方法，避免后续大量判断 ReqConst['ReturnSuccessCode'].includes(retCode)
+    total?: number|string,
+}
 
 /** 自定义的 返回消息
  * EmptyUrl 请求url为空
@@ -20,7 +85,8 @@ import type { AxiosRequestConfig, AxiosResponse } from 'axios'
  * ServerNoResponse 服务器没有响应
  *
  */
-export interface AutoRequestCfg {
+// new AutoAxios 参数类型
+export interface IAutoRequestCfg {
     REQ_CONST: {
         BaseUrl: string,
         LoginExpiredCode: Array<number|string>, // 会话超时
@@ -30,12 +96,13 @@ export interface AutoRequestCfg {
 
         Timeout?: number, // s; window.systemCfg.reqTimeout, // m * s
         DefaultLang?: string,
+        MaskClassNames?: Array<string>,
     }
     REQ_SWITCH?: {
-        GetErrMsgWay?: "byMap" | "byRes",
-        GlobalErrMsgSwitch?: 1 | 0, // 全局错误消息 提示开关; 1 开启; 0 关闭
-        GlobalLoadingSwitch?: 1 | 0, // 全局等待层 开关; 1 开启; 0 关闭
-        IfCancelRepeatpReq?: 1 | 0, // 是否取消重复请求; 1 取消重复请求; 0 不取消
+        GetErrMsgWay?: "byMap"|"byRes",
+        GlobalErrMsgSwitch?: ESwitch, // 全局错误消息 提示开关; 1 开启; 0 关闭
+        GlobalLoadingSwitch?: ESwitch, // 全局等待层 开关; 1 开启; 0 关闭
+        IfCancelDupReq?: ESwitch, // 是否取消重复请求; 1 取消重复请求; 0 不取消
     },
     RET_FIELDS_CFG: {
         RetCode: string,
@@ -50,7 +117,7 @@ export interface AutoRequestCfg {
     },
     REQ_WAYS_CFG?: {
         DefaultWay?: 'post' | 'get' | 'delete' | 'put',
-        DefaultHeader?: objAny, // { 'x-tenant-header': 'electronic-commerce' },
+        DefaultHeader?: IObjAny, // { 'x-tenant-header': 'electronic-commerce' },
     },
     showTipBox(
         retMsg?: string,
@@ -63,59 +130,23 @@ export interface AutoRequestCfg {
     beforeReq?: (config:AxiosRequestConfig) => void;
 }
 
-// laoding 对象接口
-export interface ILoad {
-    showLoadMask(): void;
-    closeLoadMask(): void;
-}
-// 错误码集合里的 错误对象
-export interface IErrListItem {
-    retCode: string;
-    retMsg: string;
-}
-export interface IErrMap { [propName: string | number]: IErrListItem }
 
-export interface IRequestConfig extends AxiosRequestConfig {
-    customedData?: {
-        GetErrMsgWay?: "byMap"|"byRes",
-        GlobalErrMsgSwitch?: 1|0, // 全局错误消息 提示开关; 1 开启; 0 关闭
-        GlobalLoadingSwitch?: 1|0, // 全局等待层 开关; 1 开启; 0 关闭
-        IfCancelRepeatpReq?: 1|0, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
-        IfNull2Empty?: boolean,
-        CsrfSwitch?: 1|0, // 1 开启
-        requestMark?: string,
-    },
-}
-export type IRespConfig = { config: IRequestConfig } & Omit<AxiosResponse, 'config'>
+/************** 非公共部分 *****************/
+declare class IAutoAxios {
+    private readonly instance: AxiosInstance
+    private static loadService?:ILoad
+    private static errMap:IErrMap
+    static pendingRequest:Array<IpendingReq>
 
-export interface IpendingReq {
-    name: string;
-    cancel: Function;
-    pendingCancelSwitch?: Array<any>;
+    setErrMap(eList: Array<IErrListItem>): void;
+    http(options:IRequestConfig): Promise<IAutoResp>
 }
-export interface objAny { [propName: string | number]: any }
-export interface IReqDefaultVal {
-    timeout: number,
-    defaultLang: string,
 
-    getErrMsgWay: "byMap"|"byRes",
-    globalErrMsgSwitch: 1|0,
-    globalLoadingSwitch: 1|0,
-    IfCancelRepeatpReq: 1|0,
+declare const AutoAxios: new(reqConfig: IAutoRequestCfg) => IAutoAxios;
 
-    langHttpKey: string,
-    defaultReqWay: 'post' | 'get' | 'put' | 'delete'
-    post: objAny,
-    get: objAny,
-    xssProtection: objAny,
-}
-export interface AutoResp {
-    retCode: number|string,
-    retMsg:string,
-    retData: objAny,
-    orgResData: objAny,
-    isOk: boolean, // 增加判断是否成功的方法，避免后续大量判断 ReqConst['ReturnSuccessCode'].includes(retCode)
-    total?: number|string,
-}
+export default AutoAxios;
+
+
+
 
 
