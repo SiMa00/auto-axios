@@ -6,7 +6,6 @@
 import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 // import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
 
-/************************************ 内部使用 start *************************************/ 
 export enum ESwitch {
     On = '1', // 开启的 值
     Off = '0',  // 关闭的 值
@@ -29,7 +28,7 @@ export interface IReqDefaultVal {
     XssProtection: IObjAny,
 }
 
-/************************************ 内部使用 end *************************************/
+/************************************************* 分割线 **************************************************/ 
 
 
 // laoding 对象接口
