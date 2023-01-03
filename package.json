@@ -1,6 +1,6 @@
 {
   "name": "auto-axios",
-  "version": "0.0.44",
+  "version": "0.0.47",
   "private": false,
   "description": "auto config axios with map",
 
