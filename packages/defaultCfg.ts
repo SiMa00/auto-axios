@@ -11,6 +11,8 @@ export const DEFAULT_VAL:IReqDefaultVal = {
     GlobalErrMsgSwitch: ESwitch.On, // 1 开启; 0 关闭
     GlobalLoadingSwitch: ESwitch.Off, // 1 开启; 0 关闭
     IfCancelDupReq: ESwitch.Off, // 是否取消重复请求; 1 取消重复请求; 0 不取消
+    IfNull2Empty: false,
+    IfHandlePms: true, // 是否deleteNull处理请求参数
 
     LangHttpKey: 'accept-language',
     DefaultReqWay: 'post',

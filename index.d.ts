@@ -6,7 +6,7 @@
 import type { AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios'
 // import type { AxiosError } from 'axios'
 
-export enum ESwitch {
+export const enum ESwitch {
     On = '1', // 开启的 值
     Off = '0',  // 关闭的 值
 }
@@ -20,6 +20,8 @@ export interface IReqDefaultVal {
     GlobalErrMsgSwitch: ESwitch,
     GlobalLoadingSwitch: ESwitch,
     IfCancelDupReq: ESwitch,
+    IfNull2Empty?: boolean,
+    IfHandlePms?: boolean,
 
     LangHttpKey: string,
     DefaultReqWay: 'post' | 'get' | 'put' | 'delete'
@@ -49,6 +51,7 @@ export interface IRequestConfig extends AxiosRequestConfig {
         GlobalLoadingSwitch?: ESwitch, // 全局等待层 开关; 1 开启; 0 关闭
         IfCancelDupReq?: ESwitch, // 是否取消重复请求; 1 yes=取消重复请求; 0 不取消
         IfNull2Empty?: boolean,
+        IfHandlePms?: boolean, // 是否deleteNull处理请求参数
         CsrfSwitch?: ESwitch, // 1 开启
         requestMark?: string,
     },

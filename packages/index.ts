@@ -89,17 +89,23 @@ class AutoAxios {
             
 
             // 是否删除 空数据 开关; 有时候不能 删除空数据
-            let myIfNull2Empty = false // 是否把 undefined null 转成 空字符串; 默认不转;
-            if (config.customedData && isNotEmpty(config.customedData.IfNull2Empty)) {
-                myIfNull2Empty = config.customedData.IfNull2Empty!
+            let myIfNull2Empty = DEFAULT_VAL.IfNull2Empty // 是否把 undefined null 转成 空字符串; 默认不转;
+            let myIfHandlePms:boolean = DEFAULT_VAL.IfHandlePms
+            if (config.customedData) {
+                if (isNotEmpty(config.customedData.IfNull2Empty)) {
+                    myIfNull2Empty = config.customedData.IfNull2Empty!
+                }
+                if (isNotEmpty(config.customedData.IfHandlePms)) {
+                    myIfHandlePms = config.customedData.IfHandlePms!
+                }
             }
             
             if (reqMethod === 'get') {
-                if (isNotEmpty(reqParams)) {
+                if (isNotEmpty(reqParams) && myIfHandlePms) {
                     config.params = deleteNull(reqParams, myIfNull2Empty)
                 }
             } else {
-                if (isNotEmpty(reqData)) {
+                if (isNotEmpty(reqData) && myIfHandlePms) {
                     config.data = deleteNull(reqData, myIfNull2Empty)
                 }
             }
