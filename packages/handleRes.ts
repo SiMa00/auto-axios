@@ -58,18 +58,18 @@ function getRetData(reqConfig:IAutoRequestCfg, response:IRespConfig, errMap?:IEr
     return res
 }
 
-export function getAutoResult(
+export async function getAutoResult(
     reqConfig:IAutoRequestCfg,
     response:IRespConfig,
     errMsgFlag:boolean, errMap?:IErrMap,
     pendingReq?:Array<IpendingReq>,
-):IAutoResp {
+):Promise<IAutoResp> {
     const res0 = getRetData(reqConfig, response, errMap)
     if (res0.isOk === true) {
         return res0
     } else {
-
-        if (errMsgFlag && pendingReq && pendingReq.length === 0 && handleMask1(reqConfig.REQ_CONST.MaskClassNames)) {
+        const hasMask = await handleMask1(reqConfig.REQ_CONST.MaskClassNames)
+        if (errMsgFlag && pendingReq && pendingReq.length === 0 && hasMask) {
             reqConfig.showTipBox(res0.retMsg, res0.retCode, response.status, response)
         }
         

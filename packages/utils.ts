@@ -117,17 +117,29 @@ export function deleteNull(obj:IObjAny, trans2EmptyChar:boolean = false, trim:bo
     }
 }
 // true 放开不控制 弹框; false 不能再弹框了
-export function handleMask1(maskClassNames?:Array<string>) {
+export async function handleMask1(maskClassNames?:Array<string>):Promise<boolean> {
     let flag = true
     const classArr = maskClassNames || DEFAULT_VAL.MaskClassNames
-    for (let i = 0; i < classArr.length; i++) {
-        const ele = classArr[i]
-        const dom = document.querySelector(ele)
-        if (dom) {
-            flag = false
-        }
-        
-    }
     
-    return flag
+    // for (let i = 0; i < classArr.length; i++) {
+    //     const ele = classArr[i]
+    //     const dom = document.querySelector(ele)
+    //     if (dom) {
+    //         flag = false
+    //     }
+    // }
+
+    return new Promise(function (resolve, reject) {
+        setTimeout(function () {
+            for (let i = 0; i < classArr.length; i++) {
+                const ele = classArr[i]
+                const dom = document.querySelector(ele)
+                if (dom) {
+                    flag = false
+                }
+                
+            }
+            resolve(flag)
+        }, 200)
+    })
 }

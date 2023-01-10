@@ -176,10 +176,10 @@ class AutoAxios {
         return config
     }
     // error:any
-    private reqError() {
+    private async reqError() {
         this.handleLoading(false)
         // TODO 开关 单个请求开关
-        const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+        const mask1Flag = await handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
         if (AutoAxios.pendingRequest.length === 0 && mask1Flag) {
             this.reqConfig.showTipBox('RequstFailed')
         }
@@ -203,12 +203,12 @@ class AutoAxios {
 
         return response
     }
-    private respError(error:any) {
+    private async respError(error:any) {
         // 被取消的请求 => cancle 进来的: error.config + error.request 都是 undefined
         if (axios.isCancel(error)) {
             return new Promise(() => {}) // 中断Promise链
         } else { // 错误向下传递
-            const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+            const mask1Flag = await handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
             
             if (error && error.config && error.config.customedData) {
                 if (AutoAxios.pendingRequest.length > 0) {
@@ -328,7 +328,7 @@ class AutoAxios {
                     }
                 } else {
                     const errorMsgSwitch = <ESwitch>response.config.customedData!.GlobalErrMsgSwitch
-                    return getAutoResult(this.reqConfig, response, errorMsgSwitch === ESwitch.On, AutoAxios.errMap, AutoAxios.pendingRequest)
+                    return await getAutoResult(this.reqConfig, response, errorMsgSwitch === ESwitch.On, AutoAxios.errMap, AutoAxios.pendingRequest)
                 }
             } catch (err) {
                 return Promise.resolve<IAutoResp>({ retCode:'', isOk: false, retMsg: 'RequestError', retData: {}, orgResData: { err } })
@@ -336,7 +336,7 @@ class AutoAxios {
         } else {
             const msgSwitch = ajaxCfg.customedData?.GlobalErrMsgSwitch || DEFAULT_VAL.GlobalErrMsgSwitch
             if (msgSwitch === ESwitch.On) {
-                const mask1Flag = handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
+                const mask1Flag = await handleMask1(this.reqConfig.REQ_CONST.MaskClassNames)
                 mask1Flag && this.reqConfig.showTipBox('EmptyUrl')
             }
             
