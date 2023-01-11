@@ -131,7 +131,7 @@ export interface IAutoRequestCfg {
         response?: AxiosResponse,
     ): void;
     // 返回 loadService 对象需要提供 closeLoadMask() + showLoadMask() 方法
-    getLoadService?: () => ILoad;
+    getLoadService?: () => ILoad; // getLoadService: (): ILoad => ({ showLoadMask, closeLoadMask })
     beforeReq?: (config:AxiosRequestConfig) => void;
 }
 
