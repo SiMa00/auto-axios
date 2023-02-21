@@ -1,14 +1,26 @@
 {
-  "name": "auto-axios",
-  "version": "0.0.49",
+  "name": "auto-tools",
+  "version": "0.0.2",
   "private": false,
-  "description": "auto config axios with map",
-
-  "main": "index.js",
-  "files": ["dist", "index.d.ts"],
-  "type": "module",
-  "types": "index.d.ts",
-
+  "main": "./dist/auto-tools.umd.js",
+  "module": "./dist/auto-tools.mjs",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./dist/auto-tools.mjs",
+      "require": "./dist/auto-tools.umd.js"
+    }
+  },
+  "files": [
+    "dist",
+    "index.d.ts"
+  ],
+  "types": "./index.d.ts",
+  "keywords": [
+    "auto-tools",
+    "auto function"
+  ],
+  "description": "常用函数的封装使用",
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build-only",
@@ -19,19 +31,17 @@
     "lintpag": "eslint packages/**/*.* --fix --ignore-path .gitignore",
     "lintdev": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
-  "keywords": ["auto axios", "auto-axios", "auto config axios"],
   "dependencies": {
-    "axios": "^1.2.0",
-    "lodash": "^4.17.21",
-    "vue": "^3.2.45"
+    "dayjs": "^1.11.7"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
     "@types/lodash": "^4.14.191",
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.14.0",
     "@vitejs/plugin-vue": "^3.2.0",
     "@vue/eslint-config-typescript": "^11.0.0",
     "@vue/tsconfig": "^0.1.3",
+    "auto-tools": "^0.0.2",
     "eslint": "^8.22.0",
     "eslint-plugin-vue": "^9.3.0",
     "npm-run-all": "^4.1.5",

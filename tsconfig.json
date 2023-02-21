@@ -1,19 +1,20 @@
 {
     "extends": "@vue/tsconfig/tsconfig.web.json",
-    "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "packages/**/*", "index.js", "index.js"],
+    "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "packages/**/*"],
     "compilerOptions": {
         "baseUrl": ".",
+        "module": "esnext",
         "paths": {
-            "@/*": ["./src/*"]
-        }
+            "@/*": ["./src/*"],
+            "@pks/*": ["./packages/*"],
+        },
+        "removeComments": true,
+        "types": [ "vite/client" ]
     },
-    "removeComments": true,
-    "declaration": true,
-    // "declarationMap": true, 
-
+  
     "references": [
         {
             "path": "./tsconfig.config.json"
         }
-    ],
+    ]
 }
