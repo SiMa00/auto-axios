@@ -37,7 +37,7 @@ import {
     tree2Arr,
     list2Map,
     getRepeatProNum,
-} from "./tool";
+} from "./tools";
 
 export {
     postFrameMsg,

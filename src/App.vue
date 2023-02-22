@@ -7,12 +7,13 @@
 <script setup lang="ts">
 // import { is } from "@pks/index";
 import AutoTools from "auto-tools";
-import { postFrameMsg, getArrObjKVs} from "auto-tools";
+import { postFrameMsg, getRepeatProNum, getArrObjKVs} from "auto-tools";
 // import type {  } from "auto-tools";
 // console.log(AutoTools);
 
-postFrameMsg({type: 11}, '*')
-getArrObjKVs('df')
+// postFrameMsg({type: 11}, '*')
+// getArrObjKVs('df')
+// getRepeatProNum({})
 </script>
 
 <style scoped>
