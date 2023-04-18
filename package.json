@@ -34,6 +34,7 @@
     "lintdev": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {
+    "vue": "^3.2.45",
     "dayjs": "^1.11.7"
   },
   "devDependencies": {
