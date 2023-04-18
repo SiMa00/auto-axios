@@ -1,6 +1,6 @@
 
 import type { Dayjs } from 'dayjs'
-import type { TBaseNull, IObjAny, IObj } from "./common";
+import type { TBaseNull, IObjAny, IRoute, IMenu, IBackMenuField, IBackMenu, IFontMenu, IObj } from "./common";
 
 /**
  * @description 验证是否为 '' null undefined {} []
@@ -46,8 +46,7 @@ export declare function isNumberVal<T>(n:T): boolean;
  * @param actData ({ type:事件类型, data?:事件携带数据 })
  * @param host string; 默认 *
  */
-export declare function postFrameMsg<ETY, D>(actData:{ type: ETY, data?: D }, host?:string):void;
-
+export declare function postParentMsg<ETY, D>(cfg: { type: ETY, data: D }, host?:string):void;
 /**
  * 对比数据是否发生过改变;
  * @param data1 OBJ
@@ -61,6 +60,7 @@ export declare function hasChangeData(data1:IObj, data2:IObj):boolean;
  * @param field 想要获取的字段
  * @param moduleKey 模块名称; 默认 admin-user
  * @param storage 存储类型; 默认 local,表示 localStorage
+ * @description 可配合 pinia; 根据 module key 持久化取值
  */
 export declare function getStorageVal(field:string, moduleKey?:string, storage?: 'local'|'session'): TBaseNull;
 
@@ -104,7 +104,7 @@ export declare function list2ObjAttr2(array:Array<IObjAny>, obj:IObjAny, key?:st
  * @param prefix 前缀 默认 '+86'
  * @returns 前缀+手机号
  */
-export declare function handlePhnoPlus(phn:string, prefix?:string): string;
+export declare function getPlusPhone(phn:string, prefix?:string): string;
 
 /**
  * 手机号 去除 前缀
@@ -112,12 +112,12 @@ export declare function handlePhnoPlus(phn:string, prefix?:string): string;
  * @param prefix 前缀 默认 '+86'
  * @returns 手机号
  */
-export declare function handlePhnoSub(phn:string, prefix?:string): string;
+export declare function getSubPhone(phn:string, prefix?:string): string;
 
 /**
  * 日期 格式化;
- * @param time 时间
- * @param pattern 格式
+ * @param time 时间; now 获取当前时间的 时间格式
+ * @param pattern 格式; 默认 YYYY-MM-DD HH:mm:ss
  */
 export declare function parseTime(time:number|'now', pattern?:string): string;
 
@@ -125,6 +125,7 @@ export declare function parseTime(time:number|'now', pattern?:string): string;
  * 获取指定时间戳
  * @param time
  * @returns TimeStamp
+ * @description 获取 Date、dayjs、日期字符串 形式的时间戳
  */
 export declare function getTimeStamp(time:string|Dayjs): number|'';
 
@@ -153,6 +154,12 @@ export declare function findIdxByKey(arr:Array<IObjAny>, val:string|number, by?:
 export declare function setRangeNumArr(start:number, end:number): Array<number>;
 
 /**
+ * 获取 校验表单 结果
+ * @param formRefVal form ref值的 value，如：myForm.value
+ * @description 适合 antd 形式的 表单校验; 注意，formRefVal 一定要.value
+ */
+export declare function validateMyForm<F extends { validateFields: Function }>(formRefVal:F): Promise<boolean>;
+/**
  * 获取当前语言
  * @returns 当前语言
  */
@@ -160,10 +167,10 @@ export declare function getCurrentLang(): string;
 
 /**
  * 下载文件
- * @param file Blob|文件url
- * @param fileName 默认当前时间戳的字符串形式
- * @param openType 默认 _blank
- * @param suffixTxt 文件后缀
+ * @param file Blob|string 文件流或者文件 url
+ * @param fileName 文件名;默认时间戳
+ * @param openType 文件 url时， window.open的打开方式，默认 _blank
+ * @param suffixTxt 文件名后缀，默认没有
  */
 export declare function downloadFile(file:Blob|string, fileName?:string, openType?:string, suffixTxt?:string): void;
 
@@ -188,8 +195,9 @@ export declare function ExportExlFile(data:Blob, fileName?:string): void;
 export declare function getRandomColor(): string;
 
 /**
- * 0-9数字加0处理
+ * 0-9数字加 0 处理
  * @param t 
+ * @description 非数字 返回 --
  */
 export declare function tranlateTime10(t:number|string): number|string;
 export declare function getUTCtime(): string;
@@ -205,8 +213,10 @@ export declare function delRepeat(list:Array<IObjAny>, key?:string): Array<IObjA
 /**
  * 数组取交集
  * @param arrA 待取交集数组
- * @param ArrB 待取交集数组
- * @param complex false,即为简单数组; 默认 fasle; 复杂数组,即数组对象,暂未开发
+ * @param arrB 待取交集数组
+ * @param crossBy 数组时根据什么字段 取交集;
+ *  有值，表示数组对象类型的取交集，默认为空表示简单数组
+ *  数组对象的取交集，是根据 crossBy 字段来的
  * @returns Array<string|number>
  * @example 
  * let a = [1,2,3,3,4,5]; let b = [1,3,4,55,6];
@@ -214,7 +224,14 @@ export declare function delRepeat(list:Array<IObjAny>, key?:string): Array<IObjA
  */
 export declare function getCrossArray(arrA:Array<string|number>, ArrB:Array<string|number>, complex?:boolean): Array<string|number>;
 
-// 数组取并集; 可能会重复;
+/**
+ * @description 数组取并集; 可能会重复;
+ * @param  arrA, arrB 待取并集数组 ; complex:复杂数组,即数组对象,false,即为简单数组;
+ * @return arr
+ * @example let a = [1,2,3,3,4,5];
+            let b = [1,3,4,55,6];
+            getUnionArray(a,b) => [1, 2, 3, 3, 4, 5, 1, 3, 4, 55, 6]
+ */
 export declare function getUnionArray(arrA:Array<string|number>, ArrB:Array<string|number>, complex?:boolean): Array<string|number>;
 
 /**
@@ -265,3 +282,54 @@ export declare function list2Map(list:Array<IObjAny>, key?:string): IObjAny;
  * [{name:'apple'},{name:'apple'},{name:'orange'},{name:'apple'},{name:'pear'}] => {"apple":3,"orange":1,"pear":1}
  */
 export declare function getRepeatProNum(arr:Array<IObjAny>): ({[propName: string]: number});
+
+
+/**
+ * 处理菜单
+ * @param viewModules 批量注册路由: import.meta.glob 的值
+ * @param frameRoute 布局layout 入口的 路由;
+ * @param list0 菜单接口返回的 菜单数据; T接口返回的菜单类型
+ * @param isAdmin 是否是 管理员;
+ * @param ifTranslate 是否需要 把接口菜单转换成指定字段;true
+ * @param fieldCfg 转换成指定字段配置;有默认值,也可以直接赋值 {}
+ * @param menuDirVal 是目录 类型时 menuType 的值;['D']
+ * @param menuPageVal 是页面 类型时 menuType 的值;['P']
+ * @param menuButtonVal 是按钮类 型时 menuType 的值;['B']
+ * @param visibleVal 菜单显示时 visible的值;0
+ * @param isI18n 是否处于国际化环境中;false
+ * @returns 
+ * myAllMenus所有菜单  
+ * mySiderMenu左侧展示 可见的菜单  
+ * myPerms按钮 级别权限字符  
+ * myPathList菜单的 path 集合
+ */
+export declare function generateMenuRoutes<T extends IObjAny>(
+    viewModules: Record<string, () => Promise<any>>,
+    frameRoute:IRoute,
+    list0:Array<T>, 
+    isAdmin:boolean, 
+    ifTranslate?:boolean, 
+    fieldCfg?:IBackMenuField,
+    menuDirVal?:Array<string>, // 是目录类型; 数组类型，防止某些情况下，存在多个值
+    menuPageVal?:Array<string>, // 是页面类型; 数组类型，防止某些情况下，存在多个值
+    menuButtonVal?:Array<string>, // 是页面类型
+    visibleVal?:0|1, // 0 显示
+    isI18n?:boolean,
+):{ myAllMenus:Array<IFontMenu>; mySiderMenu:Array<IFontMenu>; myPerms:Array<string>; myPagePaths:Array<string> };
+
+/**
+ * 转换 菜单接口返回的 model，使之符合内部需要
+ * @param list 接口返回的菜单 集合
+ * @param ifTranslate 是否需要转换成指定字段
+ * @param fieldCfg 指定字段配置; key 是内部使用的字段，value 是接口对应的字段
+ * @returns IBackMenu
+ */
+export declare function translateMenusField<T extends IObjAny>(list: Array<T>, ifTranslate?:boolean, fieldCfg?:IBackMenuField):Array<IBackMenu>;
+
+/**
+ * 菜单树形关系排序
+ * @param rArr 菜单数据源
+ * @param menuButtonVal 按钮 类型的值
+ * @returns 树形菜单数据
+ */
+export declare function sortRelationship(rArr:Array<IFontMenu>, menuButtonVal:Array<string>):Array<IFontMenu>;

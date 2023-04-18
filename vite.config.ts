@@ -20,5 +20,15 @@ export default defineConfig({
             // fileName: 'v3-antd-kits' // 是输出的包文件名，默认 fileName 是 package.json 的 name 选项
             // fileName: (format) => `build.${format}.ts`
         },
+        // rollupOptions: { // rollup打包配置
+        //     // 确保外部化处理那些你不想打包进库的依赖
+        //     external: ['vue'],
+        //     output: {
+        //         // 在 UMD 构建模式下为这些外部化的依赖提供一个全局变量
+        //         globals: {
+        //             vue: 'Vue'
+        //         }
+        //     }
+        // }
     },
 })
