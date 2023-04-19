@@ -647,6 +647,7 @@ export function getRepeatProNum(arr:Array<IObjAny>) {
  * @param menuPageVal 是页面 类型时 menuType 的值;['P']
  * @param menuButtonVal 是按钮类 型时 menuType 的值;['B']
  * @param visibleVal 菜单显示时 visible的值;0
+ * @param splitUrls 根据指定urls 分割path以挑出自带页面path(可以加载本地代码);默认为[],表示不用分割;
  * @param isI18n 是否处于国际化环境中;false
  * @returns 
  * myAllMenus所有菜单  
@@ -665,6 +666,7 @@ export function generateMenuRoutes<T extends IObjAny>(
     menuPageVal = <Array<string>>[MENU_TYPE.PAGE], // 是页面类型; 数组类型，防止某些情况下，存在多个值
     menuButtonVal = <Array<string>>[MENU_TYPE.BUTTON], // 是页面类型
     visibleVal = 0, // 0 显示
+    splitUrls:Array<string> = [],
     isI18n = false,
 ) {
     const list = translateMenusField(list0, ifTranslate, fieldCfg)
@@ -682,26 +684,29 @@ export function generateMenuRoutes<T extends IObjAny>(
             const hasPath = isNotEmpty(item.path)
             const hasComPath = isNotEmpty(item.componentPath)
             const vFlag = isAdmin || item.visible === visibleVal
-            const isLink = item.path?.startsWith('http://') || item.path?.startsWith('https://') //是否是 外链
             const mcObj:IFontMenu = { ...item, } // 适用于 路由 的菜单item
             if (isPage && hasPath) { // path 不能重复
-                // // 用域名分割 1;只要确保 自身 页面不配成 iframe 这段代码可注释掉；为了防止自身路由被配成 外链
-                // let fpath = item.path
-                // if (isLink) { // 
-                //     ROUTE_SPLIT_URLS.forEach(urlele => {
-                //         if (fpath?.includes(urlele)) {
-                //             const fpArrTem = fpath.split(urlele)
-                //             fpath = fpArrTem[1]
-                //         }
-                //     })
-                //     mcObj.path = fpath // 自身路由的 path 已经去掉了域名
-                //     // // 生成 去域名 后 的 path 部分 => /iframe/b/c
-                //     // // split('/') http://uop-test.fjdac.cn/iframe/b/c => ['http:', '', 'uop-test.fjdac.cn', 'iframe', 'b', 'c']
-                //     // const pathArrStr = item.path!.split('/').filter((obj, i) => i > 2).join('/')
-                // }
+                // 自身 path 被写成外链 path，不能加载本地代码，只能提过iframe加载，但是又想加载本地代码时，可以启用
+                if (isNotEmpty(splitUrls)) {
+                    const isLink = item.path?.startsWith('http://') || item.path?.startsWith('https://') //是否是 外链
+                    let fpath = item.path
+                    if (isLink) { // 用域名分割 1;只要确保 自身 页面不配成 iframe 这段代码可注释掉；为了防止自身路由被配成 外链
+                        splitUrls.forEach(urlele => {
+                            if (fpath?.includes(urlele)) {
+                                const fpArrTem = fpath.split(urlele)
+                                fpath = fpArrTem[1]
+                            }
+                        })
+                        mcObj.path = fpath // 自身路由的 path 已经去掉了域名
+                        // // 生成 去域名 后 的 path 部分 => /iframe/b/c
+                        // // split('/') http://uop-test.fjdac.cn/iframe/b/c => ['http:', '', 'uop-test.fjdac.cn', 'iframe', 'b', 'c']
+                        // const pathArrStr = item.path!.split('/').filter((obj, i) => i > 2).join('/')
+                    }
+                }
                 
                 myPagePaths.push(item.path!)
-                if (hasComPath && !isLink) { // 用域名分割 2 放开 !isLink
+                const newIsLink = mcObj.path?.startsWith('http://') || mcObj.path?.startsWith('https://')
+                if (hasComPath && !newIsLink) { // 用域名分割 2 放开 !newIsLink
                     const cmpth = item.componentPath?.startsWith('/') ? item.componentPath : '/' + item.componentPath // 带 / 开头
                     if (item.componentPath?.endsWith('.vue')) {
                         mcObj.component = viewModules[`../views${cmpth}`]
