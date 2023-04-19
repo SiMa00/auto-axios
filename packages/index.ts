@@ -44,7 +44,7 @@ import {
     sortRelationship,
 } from "./tools";
 
-export const AutoTool = {
+const AutoTool = {
     isEmpty,
     isNotEmpty,
     deleteNull,
@@ -89,4 +89,6 @@ export const AutoTool = {
     translateSiderOps,
     sortRelationship,
 }
+
+// export const AutoTool // 会有警告
 export default AutoTool
