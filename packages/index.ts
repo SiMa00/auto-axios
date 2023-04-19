@@ -90,6 +90,7 @@ const AutoTools = {
     sortRelationship,
 }
 
+// 按需导入 import { isEmpty } from "auto-tools";
 export {
     isEmpty,
     isNotEmpty,
@@ -136,4 +137,5 @@ export {
     sortRelationship,
 }
 
+// 默认导入
 export default AutoTools
