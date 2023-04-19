@@ -137,5 +137,5 @@ export {
     sortRelationship,
 }
 
-// 默认导入
+// 默认导入 import AT from "auto-tools";
 export default AutoTools
