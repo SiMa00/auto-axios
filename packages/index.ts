@@ -43,7 +43,7 @@ import {
     sortRelationship,
 } from "./tools";
 
-export {
+export const AutoTool = {
     isEmpty,
     isNotEmpty,
     deleteNull,
@@ -87,3 +87,4 @@ export {
     translateMenusField,
     sortRelationship,
 }
+export default AutoTool
