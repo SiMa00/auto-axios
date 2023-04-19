@@ -292,11 +292,11 @@ export declare function getRepeatProNum(arr:Array<IObjAny>): ({[propName: string
  * @param isAdmin 是否是 管理员;
  * @param ifTranslate 是否需要 把接口菜单转换成指定字段;true
  * @param fieldCfg 转换成指定字段配置;有默认值,也可以直接赋值 {}
+ * @param splitUrls 根据指定urls 分割path以挑出自带页面path(可以加载本地代码);默认为[],表示不用分割;
  * @param menuDirVal 是目录 类型时 menuType 的值;['D']
  * @param menuPageVal 是页面 类型时 menuType 的值;['P']
  * @param menuButtonVal 是按钮类 型时 menuType 的值;['B']
  * @param visibleVal 菜单显示时 visible的值;0
- * param splitUrls 根据指定urls 分割path以挑出自带页面path(可以加载本地代码);默认为[],表示不用分割;
  * @param isI18n 是否处于国际化环境中;false
  * @returns 
  * myAllMenus所有菜单  
@@ -311,11 +311,11 @@ export declare function generateMenuRoutes<T extends IObjAny>(
     isAdmin:boolean, 
     ifTranslate?:boolean, 
     fieldCfg?:IBackMenuField,
+    splitUrls?:Array<string>,
     menuDirVal?:Array<string>, // 是目录类型; 数组类型，防止某些情况下，存在多个值
     menuPageVal?:Array<string>, // 是页面类型; 数组类型，防止某些情况下，存在多个值
     menuButtonVal?:Array<string>, // 是页面类型
     visibleVal?:0|1, // 0 显示
-    splitUrls?:Array<string>,
     isI18n?:boolean,
 ):{ myAllMenus:Array<IFontMenu>; mySiderMenu:Array<IFontMenu>; myPerms:Array<string>; myPagePaths:Array<string> };
 
