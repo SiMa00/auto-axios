@@ -40,6 +40,7 @@ import {
     getRepeatProNum,
     generateMenuRoutes,
     translateMenusField,
+    translateSiderOps,
     sortRelationship,
 } from "./tools";
 
@@ -85,6 +86,7 @@ export const AutoTool = {
     getRepeatProNum,
     generateMenuRoutes,
     translateMenusField,
+    translateSiderOps,
     sortRelationship,
 }
 export default AutoTool

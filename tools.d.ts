@@ -1,6 +1,6 @@
 
 import type { Dayjs } from 'dayjs'
-import type { TBaseNull, IObjAny, IRoute, IMenu, IBackMenuField, IBackMenu, IFontMenu, IObj } from "./common";
+import type { TBaseNull, IObjAny, IRoute, ISiderShowMenu, IBackMenuField, IBackMenu, IFontMenu, IObj } from "./common";
 
 /**
  * @description 验证是否为 '' null undefined {} []
@@ -325,6 +325,13 @@ export declare function generateMenuRoutes<T extends IObjAny>(
  * @returns IBackMenu
  */
 export declare function translateMenusField<T extends IObjAny>(list: Array<T>, ifTranslate?:boolean, fieldCfg?:IBackMenuField):Array<IBackMenu>;
+
+/**
+ * sider菜单 仅做展示用，去除了多余的敏感数据
+ * @param arr 菜单数据源
+ * @returns 脱敏后的菜单({ title, routeKey, menuType, icon, children })
+ */
+export function translateSiderOps(arr:Array<IFontMenu>):Array<ISiderShowMenu>
 
 /**
  * 菜单树形关系排序

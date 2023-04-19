@@ -31,7 +31,7 @@ export interface IOptionStrNo {
 }
 
 
-/*********************************** MENU 相关 ******************************/
+/*************************************************************  菜单相关 开始 ***********************************************************/
 export interface IRoute {
     path: string; 
     name?: string; 
@@ -97,4 +97,14 @@ export interface IFontMenu extends IMenu {
     component?: () => Promise<any>;
     children?: Array<IFontMenu>;
 }
+// 菜单模型--左侧 作前端展示; 仅仅满足Menu组件需要，作前端展示(脱敏)
+export interface ISiderShowMenu {
+    title: string; // 显示的 菜单标题
+    routeKey?: string; // 外链时 时url值得形式;非外链 则是 路由/a/b的形式;自身域名时，则会去掉 域名变成 /a/b
+    menuType: string;
+    icon?: string,
+    children?: Array<ISiderShowMenu>|[];
+}
+
+/*************************************************************  菜单相关 结束 ***********************************************************/
 

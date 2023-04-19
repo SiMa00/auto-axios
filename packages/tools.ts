@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
-import type { IObjAny, IBackMenu, IBackMenuField, IRoute, IFontMenu, IObj, TBaseNull } from "./types"
+import type { IObjAny, IBackMenu, IBackMenuField, ISiderShowMenu, IRoute, IFontMenu, IObj, TBaseNull } from "./types"
 import { MENU_TYPE } from "./types"
 
 /**
@@ -625,6 +625,16 @@ export function getRepeatProNum(arr:Array<IObjAny>) {
 }
 
 
+// export function getEleStyle(ele:HTMLElement, attr:string) {
+//     if (ele.currentStyle) {
+//         return ele.currentStyle[attr]
+//     } else {
+//         return document.defaultView && document.defaultView.getComputedStyle(ele, null)[attr]
+//     }
+// }
+
+/*************************************************************  菜单相关 开始 ***********************************************************/
+
 /**
  * 处理菜单
  * @param viewModules 批量注册路由: import.meta.glob 的值
@@ -738,6 +748,7 @@ export function generateMenuRoutes<T extends IObjAny>(
     
     return { myAllMenus, mySiderMenu, myPerms, myPagePaths }
 }
+
 /**
  * 转换 菜单接口返回的 model，使之符合内部需要
  * @param list 接口返回的菜单 集合
@@ -796,6 +807,36 @@ export function translateMenusField<T extends IObjAny>(list: Array<T>, ifTransla
         return <Array<any>>list
     }
 }
+
+/**
+ * sider菜单 仅做展示用，去除了多余的敏感数据
+ * @param arr 菜单数据源
+ * @returns 脱敏后的菜单({ title, routeKey, menuType, icon, children })
+ */
+export function translateSiderOps(arr:Array<IFontMenu>) {
+    const newArr:Array<ISiderShowMenu> = []
+    for (let i = 0; i < arr.length; i++) {
+        const ele = arr[i];
+
+        const newObj:ISiderShowMenu = { 
+            title: ele.menuName, 
+            routeKey: ele.path,
+            menuType: ele.menuType, 
+            icon: ele.icon, 
+            children: [],
+        }
+        
+        if (ele.children && isNotEmpty(ele.children)) {
+            newObj.children = translateSiderOps(ele.children)
+        }
+        if (newArr) {
+            newArr.push(newObj)
+        }
+    }
+
+    return newArr
+}
+
 /**
  * 菜单树形关系排序
  * @param rArr 菜单数据源
@@ -819,6 +860,7 @@ export function sortRelationship(rArr:Array<IFontMenu>, menuButtonVal:Array<stri
     return allMenuData || []
 }
 
+/*************************************************************  菜单相关 结束 ***********************************************************/
 
 // // 推荐使用
 // export function sortTreeRelation(rArr:Array<IFontMenu>) {
