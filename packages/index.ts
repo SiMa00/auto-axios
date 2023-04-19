@@ -44,7 +44,7 @@ import {
     sortRelationship,
 } from "./tools";
 
-const AutoTool = {
+const AutoTools = {
     isEmpty,
     isNotEmpty,
     deleteNull,
@@ -90,5 +90,50 @@ const AutoTool = {
     sortRelationship,
 }
 
-// export const AutoTool // 会有警告
-export default AutoTool
+export {
+    isEmpty,
+    isNotEmpty,
+    deleteNull,
+    isArrayVal,
+    isFuncVal,
+    isAsyncFuncVal,
+    isObjectVal,
+    isStringVal,
+    isBoolVal,
+    isPromiseVal,
+    isNumberVal,
+    postParentMsg,
+    hasChangeData,
+    getStorageVal,
+    getArrObjKVs,
+    list2ObjAttr,
+    list2ObjAttr2,
+    getPlusPhone,
+    getSubPhone,
+    parseTime,
+    getTimeStamp,
+    findIdxByKey,
+    setRangeNumArr,
+    validateMyForm,
+    getCurrentLang,
+    downloadFile,
+    batchDownload,
+    ExportExlFile,
+    getRandomColor,
+    tranlateTime10,
+    getUTCtime,
+    delRepeat,
+    getCrossArray,
+    getUnionArray,
+    sortArrById,
+    arr2Tree,
+    tree2Arr,
+    list2Map,
+    getRepeatProNum,
+    generateMenuRoutes,
+    translateMenusField,
+    translateSiderOps,
+    sortRelationship,
+}
+
+export default AutoTools
