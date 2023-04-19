@@ -692,9 +692,15 @@ export function generateMenuRoutes<T extends IObjAny>(
                     let fpath = item.path
                     if (isLink) { // 用域名分割 1;只要确保 自身 页面不配成 iframe 这段代码可注释掉；为了防止自身路由被配成 外链
                         splitUrls.forEach(urlele => {
-                            if (fpath?.includes(urlele)) {
-                                const fpArrTem = fpath.split(urlele)
-                                fpath = fpArrTem[1]
+                            // 剔除 http 协议，不然 http 和 https要各写一遍
+                            // 假设 splitUrls=['http://uims-test.fjdac.cn']  fpath = http://uims-test.fjdac.cn/a/b/  
+                            // 'http://uims-test.fjdac.cn/a/b/' => ['http:', 'uims-test.fjdac.cn/a/b/']
+                            const httpArr = urlele.split('//')
+                            if (httpArr.length === 2) {
+                                if (fpath?.includes(httpArr[1])) {
+                                    const fpArrTem = fpath.split(httpArr[1])
+                                    fpath = fpArrTem[1]
+                                }
                             }
                         })
                         mcObj.path = fpath // 自身路由的 path 已经去掉了域名
