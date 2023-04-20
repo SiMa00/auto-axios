@@ -38,6 +38,8 @@ import {
     tree2Arr,
     list2Map,
     getRepeatProNum,
+    transNullChar,
+
     generateMenuRoutes,
     translateMenusField,
     translateSiderOps,
@@ -84,6 +86,8 @@ const AutoTools = {
     tree2Arr,
     list2Map,
     getRepeatProNum,
+    transNullChar,
+
     generateMenuRoutes,
     translateMenusField,
     translateSiderOps,
@@ -131,6 +135,8 @@ export {
     tree2Arr,
     list2Map,
     getRepeatProNum,
+    transNullChar,
+    
     generateMenuRoutes,
     translateMenusField,
     translateSiderOps,

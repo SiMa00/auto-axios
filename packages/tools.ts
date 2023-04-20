@@ -60,13 +60,14 @@ export function deleteNull(obj:IObjAny, trans2EmptyChar:boolean = false, trim:bo
                     if (isEmpty(val) && trans2EmptyChar) {
                         temObj[key] = ''
                     } else {
+                        // 如果是空，但是 trans2EmptyChar = false时，参数直接被过滤了
                         if (isNotEmpty(val)) {
                             let rStr = val
                             if (trim === true && isStringVal(val)) {
                                 rStr = val.trim()
                             }
                             temObj[key] = rStr
-                        }
+                        } 
                     }
                 }
             }
