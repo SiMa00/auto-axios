@@ -625,6 +625,34 @@ export function getRepeatProNum(arr:Array<IObjAny>) {
 }
 
 
+/**
+ * 把 返回结果里 带 空的，转成 undefined; 方便antd等 undefined时显示 placeHolder
+ * @param obj {}类型的参数，不是 {}类型的话，会返回原数据
+ * @param transUndefined 是否把 空 转成 undefined; true
+ * @returns obj
+ */
+export function transNullChar(obj:IObjAny, transUndefined = true) {
+    if (obj && isObjectVal(obj)) {
+        const temObj:IObjAny = {}
+
+        for (const key in obj) {
+            if (Object.hasOwnProperty.call(obj, key)) {
+                const val = obj[key]
+                const f1 = isStringVal(val) && (val.trim() === '')
+                if (transUndefined && (f1 || val === null)) {
+                    temObj[key] = undefined
+                } else {
+                    temObj[key] = val
+                }
+            }
+        }
+
+        return temObj
+    } else {
+        return obj
+    }
+}
+
 // export function getEleStyle(ele:HTMLElement, attr:string) {
 //     if (ele.currentStyle) {
 //         return ele.currentStyle[attr]
