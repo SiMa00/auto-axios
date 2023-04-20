@@ -25,13 +25,14 @@ export declare function isEmpty<T>(b:T): boolean;
 export declare function isNotEmpty<T>(b:T): boolean;
 
 /**
- * 处理对象数据里的 空字段属性
- * @param obj 
- * @param trans2EmptyChar 是否把 空 转成 空字符串;默认 false 
- * @param trim 是否清除左右空字符串;默认 true
- * @returns OBJ
+ * 处理对象数据里的 空
+ * @param obj 数据源对象
+ * @param absDelNull 是否删除 所有空(包括[]、{}) 值的属性
+ * @param delNull 是否删除 一般空(''|null|undefined)值的属性
+ * @param if2EmptyStr 是否把 一般空 的值转化为 空字符串''
+ * @returns IObjAny
  */
-export declare function deleteNull(obj:IObjAny, trans2EmptyChar?:boolean, trim?:boolean): IObjAny;
+export declare function handleObjNull(obj:IObjAny, absDelNull?:boolean, delNull?:boolean, if2EmptyStr?:boolean): IObjAny;
 export declare function isArrayVal<T>(arr:T): boolean;
 export declare function isFuncVal<T>(fn:T): boolean;
 export declare function isAsyncFuncVal<T>(fn:T): boolean;

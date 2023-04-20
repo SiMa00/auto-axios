@@ -1,7 +1,7 @@
 import { 
     isEmpty,
     isNotEmpty,
-    deleteNull,
+    handleObjNull,
     isArrayVal,
     isFuncVal,
     isAsyncFuncVal,
@@ -49,7 +49,7 @@ import {
 const AutoTools = {
     isEmpty,
     isNotEmpty,
-    deleteNull,
+    handleObjNull,
     isArrayVal,
     isFuncVal,
     isAsyncFuncVal,
@@ -98,7 +98,7 @@ const AutoTools = {
 export {
     isEmpty,
     isNotEmpty,
-    deleteNull,
+    handleObjNull,
     isArrayVal,
     isFuncVal,
     isAsyncFuncVal,

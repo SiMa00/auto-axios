@@ -42,32 +42,36 @@ export function isNotEmpty<T>(b:T) {
 }
 
 /**
- * 处理对象数据里的 空字段属性
- * @param obj 
- * @param trans2EmptyChar 是否把 空 转成 空字符串;默认 false 
- * @param trim 是否清除左右空字符串;默认 true
- * @returns OBJ
+ * 处理对象数据里的 空
+ * @param obj 数据源对象
+ * @param absDelNull 是否删除 所有空(包括[]、{}) 值的属性
+ * @param delNull 是否删除 一般空(''|null|undefined)值的属性
+ * @param if2EmptyStr 是否把 一般空 的值转化为 空字符串''
+ * @returns IObjAny
  */
-export function deleteNull(obj:IObjAny, trans2EmptyChar:boolean = false, trim:boolean = true) {
-    if (obj && isObjectVal(obj)) {
+export function handleObjNull(obj:IObjAny, absDelNull = false, delNull = false, if2EmptyStr = true) {
+    if (isNotEmpty(obj) && isObjectVal(obj)) {
         const temObj:IObjAny = {}
         for (const key in obj) {
             if (Object.hasOwnProperty.call(obj, key)) {
-                const val = obj[key]
-                const nFlag = isNumberVal(val) // isNumberVal(NaN) true; isNaN(NaN) true
-
-                if ((nFlag && !isNaN(val)) || (!nFlag)) {
-                    if (isEmpty(val) && trans2EmptyChar) {
-                        temObj[key] = ''
+                let val = obj[key]
+                const isNum = typeof val === 'number' // isNumberVal(NaN) true; typeof NaN === 'number'; isNaN(NaN) true
+                if ((isNum && !isNaN(val)) || (!isNum)) {
+                    if (absDelNull && isEmpty(val)) { // 删除所有空，包括 {} []
+                        // Reflect.deleteProperty(temObj, key)
                     } else {
-                        // 如果是空，但是 trans2EmptyChar = false时，参数直接被过滤了
-                        if (isNotEmpty(val)) {
-                            let rStr = val
-                            if (trim === true && isStringVal(val)) {
-                                rStr = val.trim()
+                        if (typeof val === 'string') val = val.trim()
+                        const isNull = val === '' || val === null || val === undefined
+                        
+                        if (isNull) { // 把 空转成 空字符串,不包括 [] {}
+                            if (delNull) { // 是否把 空值 的属性，直接剔除掉
+                                // Reflect.deleteProperty(temObj, key)
+                            } else {
+                                if (if2EmptyStr) temObj[key] = ''
                             }
-                            temObj[key] = rStr
-                        } 
+                        } else {
+                            temObj[key] = val
+                        }
                     }
                 }
             }
