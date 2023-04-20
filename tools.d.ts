@@ -290,7 +290,7 @@ export declare function getRepeatProNum(arr:Array<IObjAny>): ({[propName: string
  * @param toUndefined 是否把 空 转成 undefined; true
  * @returns obj
  */
-export function obj2Undefined(obj:IObjAny, transUndefined?:boolean):IObjAny
+export function val2Undefined(obj:IObjAny, transUndefined?:boolean):IObjAny
 
 /**
  * 处理菜单
