@@ -45,7 +45,7 @@ export function isNotEmpty<T>(b:T) {
  * 处理对象数据里的 空
  * @param obj 数据源对象
  * @param absDelNull 是否删除 所有空值(包括[]、{}) 的属性
- * @param delNull 是否删除 一般空(''|null|undefined)值的属性
+ * @param delNull 是否删除 一般空值(''|null|undefined)的属性
  * @param if2EmptyStr 是否把 一般空 的值转化为 空字符串''
  * @returns IObjAny
  */
