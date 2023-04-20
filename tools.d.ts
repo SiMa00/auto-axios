@@ -285,12 +285,12 @@ export declare function list2Map(list:Array<IObjAny>, key?:string): IObjAny;
 export declare function getRepeatProNum(arr:Array<IObjAny>): ({[propName: string]: number});
 
 /**
- * 把 返回结果里 带 空的，转成 undefined; 方便antd等 undefined时显示 placeHolder
+ * 把 Obj里 空值(''|null|undefined|[]|{})，转成 undefined; 方便antd等 undefined时显示 placeHolder
  * @param obj {}类型的参数，不是 {}类型的话，会返回原数据
- * @param transUndefined 是否把 空 转成 undefined; true
+ * @param toUndefined 是否把 空 转成 undefined; true
  * @returns obj
  */
-export function transNullChar(obj:IObjAny, transUndefined?:boolean):IObjAny
+export function obj2Undefined(obj:IObjAny, transUndefined?:boolean):IObjAny
 
 /**
  * 处理菜单
