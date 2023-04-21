@@ -187,24 +187,24 @@ export function list2ObjAttr(array:Array<IObjAny>, obj:IObjAny, key = 'key') {
 }
 /**
  * 特殊的(input前后带select定制化的) list2ObjAttr 
- * preDefaultVal input前 select默认值 
- * appDefaultVal input后 select默认值 
+ * beforeModelKey input前 select默认值 
+ * afterModelKey input后 select默认值 
  */
-export function list2ObjAttr2(array:Array<IObjAny>, obj:IObjAny, key = 'modelKey') {
+export function list2ObjAttrAB(array:Array<IObjAny>, obj:IObjAny, key = 'modelKey') {
     for (let i = 0; i < array.length; i++) {
         const at = array[i][key]
         const dftVal = array[i].defaultVal
         obj[at] = isNotEmpty(dftVal) ? dftVal : undefined
 
 
-        const bModelKey = array[i].preModelKey
-        const aModelKey = array[i].appModelKey
+        const bModelKey = array[i].beforeModelKey
+        const aModelKey = array[i].afterModelKey
         if (isNotEmpty(bModelKey)) {
-            const bModelDftVal = array[i].preDefaultVal
+            const bModelDftVal = array[i].defaultSBVal
             obj[bModelKey] = isNotEmpty(bModelDftVal) ? bModelDftVal : undefined
         }
         if (isNotEmpty(aModelKey)) {
-            const aModelDftVal = array[i].appDefaultVal
+            const aModelDftVal = array[i].defaultSAVal
             obj[aModelKey] = isNotEmpty(aModelDftVal) ? aModelDftVal : undefined
         }
     }
@@ -321,15 +321,19 @@ export const setRangeNumArr = (start:number, end:number) => {
  * @param formRefVal form ref值的 value，如：myForm.value
  * @description 适合 antd 形式的 表单校验; 注意，formRefVal 一定要.value
  */
-export async function validateMyForm<F extends { validateFields: Function }>(formRefVal:F) {
-    try {
-        const res = await formRefVal.validateFields()
-        if (res) {
-            return true
-        } else {
+export async function validateMyForm<F extends { validateFields: Function }>(formRefVal:F|undefined|null) {
+    if (formRefVal) {
+        try {
+            const res = await formRefVal.validateFields()
+            if (res) {
+                return true
+            } else {
+                return false
+            }
+        } catch (error) {
             return false
         }
-    } catch (error) {
+    } else {
         return false
     }
 }

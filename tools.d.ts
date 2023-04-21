@@ -94,10 +94,10 @@ export declare function list2ObjAttr(array:Array<IObjAny>, obj:IObjAny, key?:str
 
 /**
  * 特殊的(input前后带select定制化的) list2ObjAttr 
- * preDefaultVal input前 select默认值 
- * appDefaultVal input后 select默认值 
+ * beforeModelKey input前 select默认值 
+ * afterModelKey input后 select默认值 
  */
-export declare function list2ObjAttr2(array:Array<IObjAny>, obj:IObjAny, key?:string): IObjAny;
+export declare function list2ObjAttrAB(array:Array<IObjAny>, obj:IObjAny, key?:string): IObjAny;
 
 /**
  * 手机号 添加 前缀
