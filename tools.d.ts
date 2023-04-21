@@ -159,7 +159,7 @@ export declare function setRangeNumArr(start:number, end:number): Array<number>;
  * @param formRefVal form ref值的 value，如：myForm.value
  * @description 适合 antd 形式的 表单校验; 注意，formRefVal 一定要.value
  */
-export declare function validateMyForm<F extends { validateFields: Function }>(formRefVal:F): Promise<boolean>;
+export declare function validateMyForm<F extends { validateFields: Function }>(formRefVal:F|undefined|null): Promise<boolean>;
 /**
  * 获取当前语言
  * @returns 当前语言

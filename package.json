@@ -1,6 +1,6 @@
 {
   "name": "auto-tools",
-  "version": "0.1.9",
+  "version": "0.1.11",
   "private": false,
   "main": "./dist/auto-tools.umd.js",
   "module": "./dist/auto-tools.mjs",

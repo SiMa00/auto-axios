@@ -321,7 +321,7 @@ export const setRangeNumArr = (start:number, end:number) => {
  * @param formRefVal form ref值的 value，如：myForm.value
  * @description 适合 antd 形式的 表单校验; 注意，formRefVal 一定要.value
  */
-export async function validateMyForm<F extends IObjAny>(formRefVal:F|undefined|null) {
+export async function validateMyForm<F extends { validateFields: Function }>(formRefVal:F|undefined|null) {
     if (formRefVal) {
         try {
             const res = await formRefVal.validateFields()
