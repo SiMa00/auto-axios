@@ -858,15 +858,17 @@ export function translateMenusField<T extends IObjAny>(list: Array<T>, ifTransla
 /**
  * sider菜单 仅做展示用，去除了多余的敏感数据
  * @param arr 菜单数据源
+ * @class1Id 一级菜单 id; 默认0
  * @returns 脱敏后的菜单({ title, routeKey, menuType, icon, children })
  */
-export function translateSiderOps(arr:Array<IFontMenu>) {
+export function translateSiderOps(arr:Array<IFontMenu>, class1Id = 0) {
     const newArr:Array<ISiderShowMenu> = []
     for (let i = 0; i < arr.length; i++) {
         const ele = arr[i];
 
         const newObj:ISiderShowMenu = { 
             title: ele.menuName, 
+            isClass1: ele.parentId === class1Id,
             routeKey: ele.path,
             menuType: ele.menuType, 
             icon: ele.icon, 

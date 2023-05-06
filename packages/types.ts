@@ -100,6 +100,7 @@ export interface IFontMenu extends IMenu {
 // 菜单模型--左侧 作前端展示; 仅仅满足Menu组件需要，作前端展示(脱敏)
 export interface ISiderShowMenu {
     title: string; // 显示的 菜单标题
+    isClass1: boolean; // 是否是 一级菜单
     routeKey?: string; // 外链时 时url值得形式;非外链 则是 路由/a/b的形式;自身域名时，则会去掉 域名变成 /a/b
     menuType: string;
     icon?: string,

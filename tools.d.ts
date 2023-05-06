@@ -339,9 +339,10 @@ export declare function translateMenusField<T extends IObjAny>(list: Array<T>, i
 /**
  * sider菜单 仅做展示用，去除了多余的敏感数据
  * @param arr 菜单数据源
+ * @class1Id 一级菜单 id; 默认0
  * @returns 脱敏后的菜单({ title, routeKey, menuType, icon, children })
  */
-export function translateSiderOps(arr:Array<IFontMenu>):Array<ISiderShowMenu>
+export function translateSiderOps(arr:Array<IFontMenu>, class1Id?:string|number):Array<ISiderShowMenu>
 
 /**
  * 菜单树形关系排序
