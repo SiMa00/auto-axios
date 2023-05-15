@@ -12,22 +12,27 @@ export interface IObjNumber { [propName: string]: number }
 export interface IObjAny { [propName: string]: any }
 export interface IObj { [propName: string]: TBaseNull|Function|Array<TBaseNull>|Array<IObj>|IObj }
 
-export interface IOption { // form 里的 option
+export interface IOptionNo {
     label: string;
-    value: string;
-    [propName: string]: any;
+    value: number;
 }
 export interface IOptionStr {
     label: string;
     value: string;
 }
-export interface IOptionNo {
-    label: string;
-    value: number;
-}
 export interface IOptionStrNo {
     label: string;
     value: string|number;
+}
+export interface IFOption { // form 里的 option
+    label: string;
+    value: string;
+    disabled?: boolean;
+}
+export interface IOptionMore {
+    label: string;
+    value: string|number;
+    [propName: string|number]: any;
 }
 
 
