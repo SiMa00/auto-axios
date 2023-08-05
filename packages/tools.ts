@@ -706,7 +706,7 @@ export function generateMenuRoutes<T extends IObjAny>(
     isI18n = false,
 ) {
     const list = translateMenusField(list0, ifTranslate, fieldCfg)
-    let myAllMenus = <Array<IFontMenu>>[] // 用户权限内的 可见 + 不可见 所有菜单(目录 页面 按钮等); 但不一定是全部的
+    let myAllMenus = <Array<IFontMenu>>[] // 用户权限内的 可见 + 不可见 所有菜单(目录 页面 按钮等);
     let mySiderMenu = <Array<IFontMenu>>[] // 用户 左侧展示 可见的菜单
     const myPerms = <Array<string>>[] // 用户 按钮 级别权限字符
     const myPagePaths = <Array<string>>[] // 所有页面的 path 集合;不可重复;若菜单数据一次性返回，前端自己可以校验重复
@@ -720,63 +720,51 @@ export function generateMenuRoutes<T extends IObjAny>(
             const hasPath = isNotEmpty(item.path)
             const hasComPath = isNotEmpty(item.componentPath)
             const vFlag = isAdmin || item.visible === visibleVal
-            const mcObj:IFontMenu = { ...item, } // 适用于 路由 的菜单item
-            if (isPage && hasPath) { // path 不能重复
+            const mcObj:IFontMenu = { ...item } // 适用于 路由 的菜单item
+            
+            if (hasPath) { // path 不能重复
                 // 自身 path 被写成外链 path，不能加载本地代码，只能提过iframe加载，但是又想加载本地代码时，可以启用
-                if (isNotEmpty(splitUrls)) {
-                    const isLink = item.path?.startsWith('http://') || item.path?.startsWith('https://') //是否是 外链
-                    let fpath = item.path
-                    if (isLink) { // 用域名分割 1;只要确保 自身 页面不配成 iframe 这段代码可注释掉；为了防止自身路由被配成 外链
-                        splitUrls.forEach(urlele => {
-                            // 剔除 http 协议，不然 http 和 https要各写一遍
-                            // 假设 splitUrls=['http://uims-test.fjdac.cn']  fpath = http://uims-test.fjdac.cn/a/b/  
-                            // 'http://uims-test.fjdac.cn/a/b/' => ['http:', 'uims-test.fjdac.cn/a/b/']
-                            const httpArr = urlele.split('//')
-                            if (httpArr.length === 2) {
-                                if (fpath?.includes(httpArr[1])) {
-                                    const fpArrTem = fpath.split(httpArr[1])
-                                    fpath = fpArrTem[1]
-                                }
-                            }
-                        })
-                        mcObj.path = fpath // 自身路由的 path 已经去掉了域名
-                        // // 生成 去域名 后 的 path 部分 => /iframe/b/c
-                        // // split('/') http://uop-test.fjdac.cn/iframe/b/c => ['http:', '', 'uop-test.fjdac.cn', 'iframe', 'b', 'c']
-                        // const pathArrStr = item.path!.split('/').filter((obj, i) => i > 2).join('/')
+                if (isNotEmpty(splitUrls)) { // [],表示不用分割;
+                    let fpath = item.path // 'http://uims.albba.cn/frame/user?a=14&name=fff'
+                    const pathArr = fpath!.split('/') // ['http:', '', 'uims.albba.cn', 'frame', 'user?a=14&name=fff']
+                    const yuPath = pathArr[2] // 获取域 uims.albba.cn,不带 http://
+                    
+                    const diyPathArr = fpath!.split(yuPath) // ['http://', '/frame/user?a=14&name=fff']
+                    fpath = diyPathArr[1]
+
+                    mcObj.path = fpath
+
+                    // 一般 目录的 组件path 不需要加载,这里没有排除去加载目录组件,为了兼容一些特殊框架
+                    if (hasComPath) { 
+                        const cmpth = item.componentPath?.startsWith('/') ? item.componentPath : '/' + item.componentPath // 带 / 开头
+                        if (item.componentPath?.endsWith('.vue')) {
+                            mcObj.component = viewModules[`../views${cmpth}`]
+                        } else if (item.componentPath?.endsWith('index')) {
+                            mcObj.component = viewModules[`../views${cmpth}.vue`]
+                        } else { // 默认文件夹名字;文件夹下 有个 index.vue
+                            mcObj.component = viewModules[`../views${cmpth}/index.vue`]
+                        }
+                        // mcObj.component = () => import(/* webpackChunkName: "layout-route" */`../views/${item.componentPath}/index.vue`)
+                    
+                        if (vFlag) {
+                            // mcObj.name = pathArr[pathArr.length - 1] // path 最后一个 /后面的 字符串
+                            const rname = isI18n ? mcObj.path! : mcObj.menuName  // 处于国际化时，以path为 key
+                            frameRoute.children && frameRoute.children.push({ 
+                                name: rname,
+                                path: mcObj.path!,
+                                component: mcObj.component,
+                                meta: { title: rname, },
+                            })
+                        }
                     }
                 }
                 
                 myPagePaths.push(item.path!)
-                const newIsLink = mcObj.path?.startsWith('http://') || mcObj.path?.startsWith('https://')
-                if (hasComPath && !newIsLink) { // 用域名分割 2 放开 !newIsLink
-                    const cmpth = item.componentPath?.startsWith('/') ? item.componentPath : '/' + item.componentPath // 带 / 开头
-                    if (item.componentPath?.endsWith('.vue')) {
-                        mcObj.component = viewModules[`../views${cmpth}`]
-                    } else if (item.componentPath?.endsWith('index')) {
-                        mcObj.component = viewModules[`../views${cmpth}.vue`]
-                    } else { // 默认文件夹名字;文件夹下 有个 index.vue
-                        mcObj.component = viewModules[`../views${cmpth}/index.vue`]
-                    }
-                    // mcObj.component = () => import(/* webpackChunkName: "layout-route" */`../views/${item.componentPath}/index.vue`)
-                
-                    // 外链不需要注册 路由;外链 提过 iframe url 展示,点击菜单 也是 router.push('/frame') 带query的形式跳转路由
-                    if (vFlag) {
-                        const rname = isI18n ? mcObj.path! : mcObj.menuName  // 处于国际化时，以path为 key
-                        frameRoute.children && frameRoute.children.push({ 
-                            name: rname,
-                            path: mcObj.path!,
-                            component: mcObj.component,
-                            meta: { title: rname, },
-                        })
-                    }
-                }
             }
             
             if (vFlag) mySiderMenu.push(mcObj)
-        }
-
-        if (!isAdmin && isNotEmpty(item.perms)) {
-            myPerms.push(item.perms)
+        } else { // 只有按钮才需要权限字符; admin 权限字符只有一个 *:*:*
+            if (!isAdmin && isNotEmpty(item.perms)) myPerms.push(item.perms)
         }
 
         myAllMenus.push(item)
