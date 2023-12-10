@@ -35,7 +35,15 @@ export interface IOptionMore {
     [propName: string|number]: any;
 }
 
-
+// 转 tree 结构  后端返回的原始数据
+export interface IBackendTree {
+  id: number|string;
+  parentId: number|string; // 不写死 父id字段1
+  // [key:string]:number|string; // 不写死 父id字段2
+}
+export interface ITreeNode extends IBackendTree {
+  children?: ITreeNode[];
+}
 /*************************************************************  菜单相关 开始 ***********************************************************/
 export interface IRoute {
     path: string; 

@@ -2,7 +2,7 @@
 
 import dayjs from 'dayjs'
 import type { Dayjs } from 'dayjs'
-import type { IObjAny, IBackMenu, IBackMenuField, ISiderShowMenu, IRoute, IFontMenu, IObj, TBaseNull } from "./types"
+import type { IBackendTree, ITreeNode, IObjAny, IBackMenu, IBackMenuField, ISiderShowMenu, IRoute, IFontMenu, IObj, TBaseNull } from "./types"
 import { MENU_TYPE } from "./types"
 
 /**
@@ -41,7 +41,7 @@ export function isNotEmpty<T>(b:T) {
     return !isEmpty(b)
 }
 
-/**
+/** TODO
  * 处理对象数据里的 空
  * @param obj 数据源对象
  * @param absDelNull 是否删除 所有空值(包括[]、{}) 的属性
@@ -385,8 +385,8 @@ export function downloadFile (file:Blob|string, fileName:string = Date.now()+'',
 }
 
 /**
- * URL 批量下载
- * @param urlArr 
+ * URL 批量下载;在iframe下,子窗口不通知 父iframe也可自行下载
+ * @param urlArr
  * @param clearSecond 默认 5000 清除定时器
  */
 export function batchDownload(urlArr:Array<string>, clearSecond = 5000) {
@@ -584,6 +584,31 @@ export function arr2Tree(arr:Array<IObjAny>, pid = 'pid') {
     }
     return b
 }
+/**
+ * 数组对象转成 tree结构
+ * @param list [{ id, parentId}, ...]
+ * @returns [{id, parentId, children}]
+ */
+export function list2TreeById<T extends IBackendTree>(list:T[]) {
+  const parentList:ITreeNode[] = [];
+  
+  const obj:Record<number|string, ITreeNode> = {}; // 先生成parent建立父子关系
+  list.forEach(item => {
+    obj[item.id] = item;
+  });
+  
+  list.forEach((item) => {
+    const parent = obj[item.parentId];
+    if (parent) { // 当前项有父节点
+      parent.children = parent.children || [];
+      parent.children.push(item);
+    } else { // 当前项没有父节点 -> 顶层
+      parentList.push(item);
+    }
+  });
+
+  return parentList;
+}
 
 /**
  * tree 平铺展开 成数组对象, 包括 1级、2级等 所有级别, 不重复
@@ -608,15 +633,15 @@ export function tree2Arr(treeData:Array<IObjAny>) {
  * @param list 数组；key:String; 默认是 'id'
  * @param key map的key; 默认是 'value'
  */
-export function list2Map(list:Array<IObjAny>, key = 'value') {
-    const map:{ [propName: string|number]:IObjAny } = {}
-    if (isNotEmpty(list)) {
-        for (let index = 0; index < list.length; index++) {
-            const val = list[index][key]
-            map[val] = list[index]
-        }
+export function list2Map<T extends {[propname:string|number]: any}>(list: Array<T>, key:string|number = 'value') {
+  const map:{[propname:typeof key]: T} = {};
+  if (isNotEmpty(list)) {
+    for (let index = 0; index < list.length; index++) {
+      const val = list[index][key];
+      map[val] = list[index];
     }
-    return map
+  }
+  return map;
 }
 
 /**
