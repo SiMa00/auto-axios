@@ -1,37 +1,28 @@
 {
   "name": "auto-tools",
-  "version": "0.1.14",
+  "version": "0.2.1",
   "private": false,
-  "main": "./dist/auto-tools.umd.js",
-  "module": "./dist/auto-tools.mjs",
+  "main": "./dist/auto-tools.umd.cjs",
+  "module": "./dist/auto-tools.js",
+  "files": ["package.json", "README.md", "dist/", "types/index.d.ts", "types/type.d.ts"],
+  "type": "module",
+  "types": "./types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "import": "./dist/auto-tools.mjs",
-      "require": "./dist/auto-tools.umd.js"
+      "import": "./dist/auto-tools.js",
+      "require": "./dist/auto-tools.umd.cjs"
     }
   },
-  "files": [
-    "dist",
-    "tools.d.ts",
-    "common.d.ts",
-    "index.d.ts"
-  ],
-  "types": "./index.d.ts",
-  "keywords": [
-    "auto-tools",
-    "auto function"
-  ],
-  "description": "常用函数的封装使用",
   "scripts": {
+    "build": "vite build && tsc",
+    "lintpag": "eslint packages/**/*.* --fix --ignore-path .gitignore",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    
+    "dts": "vue-tsc --declaration --emitDeclarationOnly ",
     "dev": "vite",
-    "build": "run-p type-check build-only",
     "preview": "vite preview",
     "build-only": "vite build",
-    "type-check": "vue-tsc --noEmit",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
-    "lintpag": "eslint packages/**/*.* --fix --ignore-path .gitignore",
-    "lintdev": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "vue": "^3.2.45",
@@ -51,5 +42,11 @@
     "typescript": "~4.7.4",
     "vite": "^3.2.4",
     "vue-tsc": "^1.0.9"
-  }
+  },
+  "keywords": [
+    "auto-tools",
+    "auto function"
+  ],
+  "license": "ISC",
+  "description": "常用函数的封装使用"
 }

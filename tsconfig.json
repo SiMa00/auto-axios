@@ -1,20 +1,20 @@
 {
-    "extends": "@vue/tsconfig/tsconfig.web.json",
-    "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "packages/**/*"],
-    "compilerOptions": {
-        "baseUrl": ".",
-        "module": "esnext",
-        "paths": {
-            "@/*": ["./src/*"],
-            "@pks/*": ["./packages/*"],
-        },
-        "removeComments": true,
-        "types": [ "vite/client" ]
+  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "include": ["packages/**/*"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
     },
-  
-    "references": [
-        {
-            "path": "./tsconfig.config.json"
-        }
-    ]
+    // "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly":true, // 只输出声明文件(ts 产物)
+    "declarationDir": "types", // 声明文件生成的目录
+    "removeComments": false, // 设置true d.ts文件的注释也会删除掉
+  },
+  "references": [
+    {
+      "path": "./tsconfig.config.json"
+    }
+  ],
 }
